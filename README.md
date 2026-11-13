@@ -36,6 +36,7 @@ Capture / paste link / job boards
 | **Data minimisation** | Contact details are never sent to the AI. Emails, phones and profile URLs are redacted from job text first. |
 | **HubSpot as the single source of truth** | Every job is a deal; every module moves it by changing its stage. The CRM doubles as the review queue. |
 | **ATS-safe output** | Single column, standard headings, hyphen bullets, no tables, images, headers or footers. Automated tests enforce it. |
+| **Lean CRM model** | HubSpot's free CRM allows 10 custom properties, so the model uses 9 and keeps everything else in built-in fields, notes and attachments. Setup is idempotent and checks the limit before writing. |
 | **Safe re-runs, loud failures, dry-run mode** | Unique keys prevent duplicates; errors alert; a dry run uses made-up data only. |
 
 ## Architecture
@@ -66,7 +67,7 @@ tests/fixtures/      made-up sample data only
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Foundations: repo, config, rubric, ATS CV template | ✅ Done |
-| M1 | HubSpot pipeline and properties setup | ⏳ Next |
+| M1 | HubSpot pipeline and properties setup | 🔧 In progress |
 | M2 | Manual baseline (5 applications timed by hand) | |
 | M3 | Intake: job boards, capture bookmarklet, paste-a-link form | |
 | M4 | Qualify and research | |

@@ -78,6 +78,11 @@ llm:
   max_retries: 3
   retry_backoff_seconds: 20
 
+# --- HubSpot (PRD §9) ------------------------------------------------
+hubspot:
+  # Free CRM allows 10 custom properties in total. Raise on a paid plan.
+  custom_property_limit: 10
+
 # --- Job-board sources (PRD §10.1 IN-3) ------------------------------
 # Board tokens are the company's slug on that ATS, e.g.
 #   https://boards.greenhouse.io/<token>  ->  greenhouse: [<token>]

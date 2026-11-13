@@ -1,0 +1,35 @@
+name: Setup HubSpot
+
+# Manual only: Actions tab > "Setup HubSpot" > Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "plan = show changes only (safe). apply = make the changes."
+        type: choice
+        options: [plan, apply]
+        default: plan
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run setup (${{ inputs.mode }})
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+        run: |
+          if [ "${{ inputs.mode }}" = "apply" ]; then
+            python scripts/setup_hubspot.py --apply
+          else
+            python scripts/setup_hubspot.py
+          fi

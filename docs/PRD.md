@@ -181,49 +181,42 @@ The free CRM includes **one** deal pipeline. The setup script renames and reconf
 
 ### 9.2 Deal properties (custom)
 
+**Decision (M1, 13 Nov 2026):** HubSpot's free CRM allows **10 custom properties in total** across the account (HubSpot product catalog, Free tools). The model is therefore lean: 9 custom deal properties, with 1 spare. Everything else uses built-in fields, associations and notes. The setup script checks the limit before writing anything. The definitions live in `src/hubspot_schema.py`.
+
 | Label | Internal name | Type | Set by |
 |---|---|---|---|
-| Job URL | `job_url` | Single-line text (unique key) | Intake |
-| LinkedIn Post ID | `linkedin_post_id` | Single-line text (unique key for LinkedIn posts) | Intake |
-| Needs Post Text | `needs_post_text` | Checkbox | Intake |
+| Job URL | `job_url` | Single-line text (unique key). For LinkedIn posts, the normalised post URL, which contains the post ID | Intake |
+| Job Source | `job_source` | Dropdown: LinkedIn Post / LinkedIn Alert / Greenhouse / Lever / Ashby / RemoteOK / Himalayas / WWR | Intake |
 | Apply URL | `apply_url` | Single-line text | Qualify |
-| Source | `job_source` | Dropdown: LinkedIn Post / LinkedIn Alert / Greenhouse / Lever / Ashby / RemoteOK / Himalayas / WWR | Intake |
-| Raw Job Text | `job_raw_text` | Multi-line text | Intake |
-| Job Title | `job_title` | Single-line text | Qualify |
 | Remote Scope | `remote_scope` | Dropdown: Worldwide / Region / Country-restricted / Unclear / Not remote | Qualify |
-| Eligible Regions | `eligible_regions` | Single-line text | Qualify |
-| Seniority | `seniority` | Dropdown: Entry / Mid / Senior / Lead / Unclear | Qualify |
-| Salary | `salary_text` | Single-line text | Qualify |
-| Required Skills | `required_skills` | Multi-line text | Qualify |
-| Tools Mentioned | `tools_mentioned` | Multi-line text | Qualify |
 | Fit Score | `fit_score` | Number (0–100) | Qualify |
-| Fit Reasons | `fit_reasons` | Multi-line text | Qualify |
-| Company Brief | `company_brief` | Multi-line text | Research |
-| Suggested Contact Titles | `suggested_contact_titles` | Single-line text | Research |
-| CV File | `cv_file_url` | Single-line text (HubSpot file link) | Draft |
-| Cover Letter File | `cover_letter_file_url` | Single-line text | Draft |
-| Keyword Coverage | `keyword_coverage` | Number (%) | Draft |
-| Missing Keywords | `missing_keywords` | Multi-line text (gaps Peace genuinely lacks) | Draft |
-| Connection Note | `connection_note` | Multi-line text (≤ 300 characters) | Draft |
-| Follow-up Message | `followup_message` | Multi-line text | Draft |
-| Applied Date | `applied_date` | Date | Peace |
-| Minutes Spent | `minutes_spent` | Number | Peace (optional, for metrics) |
-| Pipeline Error | `pipeline_error` | Multi-line text | System |
+| Keyword Coverage % | `keyword_coverage` | Number | Draft |
+| Job Analysis | `job_analysis` | Multi-line text: fit reasons, seniority, salary, eligible regions, required skills, tools, missing keywords, suggested contact titles | Qualify, Research, Draft |
+| Pipeline Error | `pipeline_error` | Multi-line text. `NEEDS POST TEXT` at the start replaces the old checkbox | System |
+| Applied Date | `applied_date` | Date (stage-entered dates need a Professional plan) | Peace |
+
+**Where the other planned fields went:**
+
+| Planned field | Now stored in |
+|---|---|
+| Job title, company | Deal name `<Job Title> - <Company>` and the associated company |
+| Raw job text | Built-in deal **Deal description** (Peace pastes missing post text here) |
+| LinkedIn post ID | Inside `job_url` |
+| Needs post text | `pipeline_error` = `NEEDS POST TEXT ...` |
+| Eligible regions, seniority, salary, skills, tools, fit reasons, missing keywords, suggested contact titles | `job_analysis` |
+| Company brief | Built-in company **Description**, plus a note on the deal |
+| CV and cover letter files | Attachments on a deal note (shown in the deal's Attachments panel) |
+| Connection note, follow-up message | A "Drafts" note on the deal |
+| Minutes spent | Not stored in HubSpot. Time is logged in the M2 baseline sheet |
 
 ### 9.3 Company
-Uses default properties: name, domain, website. Linked to the deal.
+Uses default properties: name, domain, website, description (company brief). Linked to the deal.
 
 ### 9.4 Contact (job poster)
-Default name properties, plus:
+Default name properties plus the built-in **LinkedIn URL** property (`hs_linkedin_url`) for the poster's profile link. No custom contact properties (the old `pipeline_role` field is dropped: contacts the system creates are always posters, and hiring managers are added by hand). Linked to the deal and the company.
 
-| Label | Internal name | Type |
-|---|---|---|
-| LinkedIn Profile URL | `linkedin_profile_url` | Single-line text |
-| Pipeline Role | `pipeline_role` | Dropdown: Poster / Hiring Manager / Recruiter |
-
-Linked to the deal and the company.
-
-**Note:** free-plan limits on custom properties should be checked during setup. If needed, merge lower-value fields.
+### 9.5 Authentication
+HubSpot stopped allowing new legacy private apps on 26 Oct 2026. The system uses a **Service Key** (Development > Keys > Service keys), sent as a Bearer token and stored as the `HUBSPOT_TOKEN` secret. Minimum scopes: deal, contact and company object read/write, and deal and contact property-settings read/write. `files.write` is added in M5.
 
 ---
 
@@ -480,7 +473,7 @@ timezone: "Africa/Lagos"
 
 | Name | Where | Purpose |
 |---|---|---|
-| `HUBSPOT_TOKEN` | GitHub and Cloudflare | HubSpot private app token |
+| `HUBSPOT_TOKEN` | GitHub and Cloudflare | HubSpot Service Key (§9.5) |
 | `LLM_API_KEY` | GitHub | Gemini or Claude key |
 | `MASTER_CV` | GitHub | Master CV content |
 | `CAPTURE_SECRET` | GitHub, Cloudflare and the bookmarklet | Protects the capture endpoint |
@@ -494,7 +487,7 @@ timezone: "Africa/Lagos"
 | # | Milestone | Done when |
 |---|---|---|
 | M0 | **Foundations:** master CV, ATS template, rubric, target company list | Master CV approved by Peace. Template passes the plain-text paste test |
-| M1 | **HubSpot setup:** private app token, `setup_hubspot.py` | Pipeline, stages and properties exist. Board view saved |
+| M1 | **HubSpot setup:** Service Key, `setup_hubspot.py` | Pipeline, stages and properties exist. Board view saved |
 | M2 | **Manual baseline:** 5 applications done fully by hand and timed | Baseline minutes recorded |
 | M3 | **Intake:** job boards, capture bookmarklet, paste-a-link form and Worker | Capturing or pasting a post creates exactly one deal and a linked poster contact with the correct profile link. A repeat is flagged as a duplicate. A URL-only submission is flagged "Needs post text" |
 | M4 | **Qualify and research** | Sample jobs score as expected. Hard filters archive restricted roles |
@@ -546,7 +539,7 @@ timezone: "Africa/Lagos"
 ## 21. Open questions
 1. ~~Production AI provider~~ **Decided:** free Gemini tier in Phase 1. Paid Gemini or Claude to be chosen at Phase 2.
 2. Digest email sending method (Gmail app password vs HubSpot vs another provider).
-3. Exact HubSpot free-plan custom property limits (checked during M1).
+3. ~~HubSpot free-plan custom property limits~~ **Decided:** 10 in total. See §9.2.
 4. The list of target companies' job boards (started in M0, finalised and verified in M3 when the source modules are built).
 
 ---
@@ -558,7 +551,7 @@ timezone: "Africa/Lagos"
 | **ATS** | Applicant Tracking System, the software companies use to store and screen CVs |
 | **Pipeline / stage** | The columns a job moves through in HubSpot, like a to-do board |
 | **Deal** | HubSpot's word for one opportunity. Here, one job application |
-| **Private app token** | A secret key that lets our code read and write to your HubSpot |
+| **Service Key** | A secret key that lets our code read and write to your HubSpot (replaced "private app tokens" in 2026) |
 | **GitHub Actions** | GitHub's alarm clock that runs our code on a schedule |
 | **Cloudflare Worker** | A tiny always-awake program that catches your capture clicks |
 | **Bookmarklet** | A browser bookmark that runs a small action when clicked |

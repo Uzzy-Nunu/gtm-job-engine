@@ -1,0 +1,65 @@
+# MADE-UP TEST DATA ONLY. Not a real person. Used to test the CV template.
+# Shape = what the Draft step (M5) will pass to src/render_docx.py.
+name: Alex Sample
+contact:
+  email: alex.sample@example.com
+  linkedin: linkedin.com/in/alex-sample-example
+summary: >-
+  Go-to-Market (GTM) engineer who builds outbound and lifecycle systems for
+  B2B SaaS teams. Connects CRM data, enrichment and AI workflows so sales and
+  marketing teams spend time on qualified accounts, not manual research.
+core_skills:
+  - Go-to-Market (GTM) strategy
+  - Outbound automation
+  - Lead scoring
+  - CRM data modelling
+  - Lifecycle email
+  - A/B testing
+  - AI workflow design
+tools:
+  - HubSpot
+  - Clay
+  - Zapier
+  - Python
+  - SQL
+  - Google Sheets
+  - Webflow
+experience:
+  - title: Growth Operations Lead
+    company: Example Analytics Ltd
+    start: 2023-03
+    end: present
+    bullets:
+      - Built a lead-scoring model in HubSpot that routed 1,200 inbound leads a month to the right rep within 5 minutes.
+      - Designed a Clay enrichment workflow that cut manual account research from 20 minutes to 3 minutes per account.
+      - Launched 6 outbound sequences with A/B tested copy, raising reply rate from 2.1% to 4.8%.
+      - Set up weekly pipeline reporting in SQL and Google Sheets used by the leadership team.
+  - title: Marketing Automation Specialist
+    company: Sample Software Co
+    start: 2021-01
+    end: 2023-02
+    bullets:
+      - Migrated 40,000 contacts to HubSpot with clean lifecycle stages and no data loss.
+      - Built onboarding email journeys that lifted trial-to-paid conversion by 18%.
+      - Created Zapier automations linking forms, CRM and Slack alerts for the sales team.
+  - title: Content Assistant
+    company: Placeholder Media
+    start: 2019-06
+    end: 2020-12
+    bullets:
+      - Wrote and scheduled weekly newsletters for a list of 8,000 subscribers.
+projects:
+  - name: Job Search Automation (personal project)
+    bullets:
+      - Built a Python pipeline that scores job posts and drafts tailored applications for human review.
+education:
+  - degree: BSc Economics
+    school: University of Example
+    start: 2014-09
+    end: 2018-07
+certifications:
+  - HubSpot Marketing Hub Software Certification
+  - Google Analytics Certification
+languages:
+  - English (fluent)
+  - French (basic)

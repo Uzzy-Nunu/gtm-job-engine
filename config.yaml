@@ -1,0 +1,109 @@
+# ------------------------------------------------------------------
+# GTM Job Engine - configuration
+# This file is public. Never put names, emails, keys or CV content here.
+# Secrets live in GitHub Secrets / Cloudflare secrets (see docs/PRD.md §16).
+# ------------------------------------------------------------------
+
+# --- Roles we want -------------------------------------------------
+target_titles:
+  - GTM Engineer
+  - Go-to-Market Engineer
+  - Growth Engineer
+  - Marketing Engineer
+  - Marketing Automation
+  - Growth Operations
+  - Revenue Operations
+
+adjacent_titles:
+  - Growth Marketing
+  - Marketing Operations
+  - Founder's Associate
+
+# Titles that mean "clearly not a match" (hard filter, PRD §10.2 QU-2)
+excluded_title_words:
+  - Account Executive
+  - SDR
+  - BDR
+  - Sales Development
+  - Customer Success Manager
+  - Software Engineer
+  - Backend
+  - Frontend
+  - Data Scientist
+  - Intern
+
+# --- Where Peace can work from (hard filter + rubric) ----------------
+# A job is kept if its remote scope is Worldwide, or a Region / Country
+# that matches one of these words.
+eligible_regions:
+  - Worldwide
+  - Anywhere
+  - Global
+  - EMEA
+  - Africa
+  - Nigeria
+  - Europe time zones
+  - CET
+  - WAT
+
+# --- Fit score rubric (PRD §11.3) ------------------------------------
+fit_threshold: 70          # score >= this -> Qualified, else Archived
+
+rubric:
+  remote:
+    worldwide: 30
+    eligible_region: 20
+    unclear: 10
+  title:
+    target_match: 25
+    adjacent_match: 15
+  skills_tools_overlap_max: 20   # scaled by overlap with the master CV
+  seniority:
+    points: 15
+    preferred: [Entry, Mid]
+    allowed_if_requirements_match: [Senior]
+  salary_listed: 10
+
+# --- Volume caps (Phase 1 -> Phase 2 values in comments) -------------
+daily_import_cap: 40       # Phase 2: about 100
+daily_draft_cap: 8         # Phase 2: about 20
+followup_after_days: 5
+duplicate_window_days: 14  # same company + title within this many days = duplicate
+
+# --- AI provider (PRD §11.1) -----------------------------------------
+llm:
+  provider: gemini         # gemini | claude
+  fast_model: null         # chosen in M4 after checking current free-tier models
+  draft_model: null        # chosen in M5
+  max_retries: 3
+  retry_backoff_seconds: 20
+
+# --- Job-board sources (PRD §10.1 IN-3) ------------------------------
+# Board tokens are the company's slug on that ATS, e.g.
+#   https://boards.greenhouse.io/<token>  ->  greenhouse: [<token>]
+#   https://jobs.lever.co/<token>         ->  lever: [<token>]
+#   https://jobs.ashbyhq.com/<token>      ->  ashby: [<token>]
+companies:
+  greenhouse: []
+  lever: []
+  ashby: []
+
+public_feeds:
+  remoteok: true
+  himalayas: true
+  we_work_remotely: true
+
+# --- CV output (PRD §12) ---------------------------------------------
+cv:
+  max_pages: 2
+  location_label: Remote
+  bullets_relevant_role: [3, 5]   # min, max
+  bullets_other_role: [1, 2]
+  # Roles tagged OPTIONAL in the master CV only appear when the job
+  # values these themes. Default: hidden.
+  optional_role_themes: [AGENCY, BRAND, CONTENT]
+
+# --- Scheduling / misc -----------------------------------------------
+timezone: Africa/Lagos
+digest_local_time: "07:30"
+dry_run: false             # true = use tests/fixtures, write nothing to HubSpot

@@ -1,0 +1,57 @@
+# ------------------------------------------------------------------
+# GTM Job Engine - files that must NEVER be committed (public repo)
+# ------------------------------------------------------------------
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+*.local.*
+*.secret*
+secrets/
+private/
+.dev.vars
+
+# Master CV and any personal CV content (lives in the MASTER_CV secret)
+master_cv*
+*master-cv*
+*Master_CV*
+*Master CV*
+
+# Generated documents and run output (contain personal data)
+output/
+out/
+*.pdf
+Peace-George-*
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Cloudflare Worker
+worker/node_modules/
+worker/.wrangler/
+
+# Office temp / lock files
+~$*
+*.tmp
+
+# OS and editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json

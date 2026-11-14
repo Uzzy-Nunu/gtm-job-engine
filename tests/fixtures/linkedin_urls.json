@@ -1,0 +1,63 @@
+{
+  "_comment": "Made-up LinkedIn post URLs and the expected parse. Shared by the Python tests and the Cloudflare Worker tests so both read links the same way.",
+  "valid": [
+    {
+      "url": "https://www.linkedin.com/posts/jane-doe-123_hiring-gtm-activity-7390000000000000001-AbCd?utm_source=share&utm_medium=member_desktop",
+      "post_id": "7390000000000000001",
+      "urn_type": "activity",
+      "canonical_url": "https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000001",
+      "author_slug": "jane-doe-123",
+      "profile_url": "https://www.linkedin.com/in/jane-doe-123",
+      "name_guess": "Jane Doe"
+    },
+    {
+      "url": "linkedin.com/posts/alex-sample-a1b2c3d4_were-hiring-a-growth-engineer-ugcPost-7391111111111111111-Zz9Y",
+      "post_id": "7391111111111111111",
+      "urn_type": "ugcPost",
+      "canonical_url": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7391111111111111111",
+      "author_slug": "alex-sample-a1b2c3d4",
+      "profile_url": "https://www.linkedin.com/in/alex-sample-a1b2c3d4",
+      "name_guess": "Alex Sample"
+    },
+    {
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7392222222222222222/",
+      "post_id": "7392222222222222222",
+      "urn_type": "activity",
+      "canonical_url": "https://www.linkedin.com/feed/update/urn:li:activity:7392222222222222222",
+      "author_slug": null,
+      "profile_url": null,
+      "name_guess": null
+    },
+    {
+      "url": "https://m.linkedin.com/posts/samplecorp_remote-revops-share-7393333333333333333-QwEr",
+      "post_id": "7393333333333333333",
+      "urn_type": "share",
+      "canonical_url": "https://www.linkedin.com/feed/update/urn:li:share:7393333333333333333",
+      "author_slug": "samplecorp",
+      "profile_url": "https://www.linkedin.com/in/samplecorp",
+      "name_guess": "Samplecorp"
+    },
+    {
+      "url": "https://www.linkedin.com/posts/mary-o-test-9_gtm-activity-7394444444444444444-AAAA",
+      "post_id": "7394444444444444444",
+      "urn_type": "activity",
+      "canonical_url": "https://www.linkedin.com/feed/update/urn:li:activity:7394444444444444444",
+      "author_slug": "mary-o-test-9",
+      "profile_url": "https://www.linkedin.com/in/mary-o-test-9",
+      "name_guess": "Mary O Test"
+    }
+  ],
+  "invalid": [
+    {"url": "https://lnkd.in/abc123", "error_contains": "Copy link to post"},
+    {"url": "https://www.linkedin.com/jobs/view/4000000000", "error_contains": "job pages"},
+    {"url": "https://www.linkedin.com/in/jane-doe-123", "error_contains": "post ID"},
+    {"url": "https://example.com/jobs/1", "error_contains": "not a LinkedIn link"},
+    {"url": "   ", "error_contains": "paste a link"}
+  ],
+  "normalise": [
+    ["https://www.Example.com/careers/gtm-engineer/?utm_source=linkedin&ref=abc#apply", "https://example.com/careers/gtm-engineer"],
+    ["http://boards.greenhouse.io/samplecorp/jobs/123?gh_src=xyz", "https://boards.greenhouse.io/samplecorp/jobs/123"],
+    ["https://jobs.lever.co/demo-co/abc-def/?lever-source=LinkedIn", "https://jobs.lever.co/demo-co/abc-def"],
+    ["jobs.ashbyhq.com/fictional/1234?b=2&a=1", "https://jobs.ashbyhq.com/fictional/1234?a=1&b=2"]
+  ]
+}

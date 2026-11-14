@@ -93,5 +93,8 @@ class HubSpotClient:
     def patch(self, path, json):
         return self.request("PATCH", path, json=json)
 
+    def put(self, path, json=None):
+        return self.request("PUT", path, json=json)
+
     def delete(self, path, params=None):
         return self.request("DELETE", path, params=params)

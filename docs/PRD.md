@@ -236,7 +236,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | IN-1f | **Missing text fallback:** if only a URL is submitted with no text and no external job link, the deal is created with the poster's details and flagged **"Needs post text"**. The daily digest lists these so Peace can paste the text in HubSpot (one field) and the pipeline picks them up on the next run. | P0 |
 | IN-2 | **Worker:** validates the secret, normalises the URL (removes tracking parameters), checks HubSpot for an existing post ID or `job_url`, creates the deal (`New`, source = LinkedIn Post) and the poster contact, and returns a success or duplicate message to the browser. | P0 |
 | IN-3 | **Job-board import:** daily fetch from public feeds for companies in `config.yaml` (Greenhouse, Lever and Ashby job boards), plus RemoteOK, Himalayas and We Work Remotely, filtered by title keywords. | P0 |
-| IN-4 | **Duplicate removal** on the normalised `job_url`. Cross-source duplicates (same company and title within 14 days) are archived with a reason. | P0 |
+| IN-4 | **Duplicate removal** on the normalised `job_url` (LinkedIn posts use the canonical `feed/update/urn:li:...` URL, so every link style for the same post matches). Cross-source duplicates (same company and title within 14 days) are skipped with a logged reason rather than created and archived, which saves records. | P0 |
 | IN-5 | **Company upsert:** find or create the company by domain or name and link it to the deal. | P0 |
 | IN-6 | **Poster contact (LinkedIn captures and pasted links):** create or link a contact with `pipeline_role = Poster`, using the profile link from the URL (IN-1c), plus any name, title or company the AI finds in the post text. If the same person posts again, the existing contact is reused (matched on profile link). | P0 |
 | IN-7 | **LinkedIn job alerts:** Apps Script reads the Gmail label `job-alerts`, pulls out job links and posts them to the Worker. | P1 |
@@ -488,7 +488,7 @@ timezone: "Africa/Lagos"
 |---|---|---|
 | M0 | **Foundations:** master CV, ATS template, rubric, target company list | Master CV approved by Peace. Template passes the plain-text paste test |
 | M1 | **HubSpot setup:** Service Key, `setup_hubspot.py` | Pipeline, stages and properties exist. Board view saved |
-| M2 | **Manual baseline:** 5 applications done fully by hand and timed | Baseline minutes recorded |
+| M2 | **Manual baseline:** 5 applications done fully by hand and timed, per pipeline step (sheet kept private; `scripts/baseline_summary.py` publishes aggregates to `docs/baseline.md`) | Baseline minutes recorded |
 | M3 | **Intake:** job boards, capture bookmarklet, paste-a-link form and Worker | Capturing or pasting a post creates exactly one deal and a linked poster contact with the correct profile link. A repeat is flagged as a duplicate. A URL-only submission is flagged "Needs post text" |
 | M4 | **Qualify and research** | Sample jobs score as expected. Hard filters archive restricted roles |
 | M5 | **Draft** | A tailored CV passes the truth check, opens in Notepad cleanly after copy-paste, and is no more than 2 pages |
@@ -496,6 +496,8 @@ timezone: "Africa/Lagos"
 | M7 | **Go live:** free Gemini key, real jobs | 5 applications a day for 5 days running |
 | M8 | **Portfolio:** README case study, diagram, Loom, LinkedIn posts | Published and linked in LinkedIn Featured |
 | M9 | **Scale to 15 a day** | Scale-up criteria in §3 met. 15 applications a day for 5 working days running, with quality holding steady |
+
+**Decision (14 Nov 2026): M2 runs in parallel with M3 and does not block the build.** Peace completes the 5 timed manual applications while intake is being built. To keep the baseline honest, the timed applications are done before she starts using the capture button or paste form. If that becomes impractical, the PRD will record that the baseline is partial or estimated.
 
 ---
 

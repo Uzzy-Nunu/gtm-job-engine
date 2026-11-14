@@ -2,7 +2,7 @@
 
 **A human-in-the-loop system that finds remote Go-to-Market (GTM) roles, scores fit, researches the company and drafts tailored, ATS-friendly applications for review in HubSpot.**
 
-> Status: 🚧 In build. Milestone 0 (foundations) complete. See [roadmap](#roadmap).
+> Status: 🚧 In build. Milestones 0-1 (foundations, HubSpot setup) complete. See [roadmap](#roadmap).
 
 ---
 
@@ -67,8 +67,8 @@ tests/fixtures/      made-up sample data only
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Foundations: repo, config, rubric, ATS CV template | ✅ Done |
-| M1 | HubSpot pipeline and properties setup | 🔧 In progress |
-| M2 | Manual baseline (5 applications timed by hand) | |
+| M1 | HubSpot pipeline and properties setup | ✅ Done |
+| M2 | Manual baseline (5 applications timed by hand) | ⏳ Next |
 | M3 | Intake: job boards, capture bookmarklet, paste-a-link form | |
 | M4 | Qualify and research | |
 | M5 | Draft: tailored CV, cover letter, messages, truth check | |

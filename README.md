@@ -2,7 +2,7 @@
 
 **A human-in-the-loop system that finds remote Go-to-Market (GTM) roles, scores fit, researches the company and drafts tailored, ATS-friendly applications for review in HubSpot.**
 
-> Status: 🚧 In build. Milestones 0-1 (foundations, HubSpot setup) complete. See [roadmap](#roadmap).
+> Status: 🚧 In build. Milestones 0-2 complete; intake (M3) in progress. See [roadmap](#roadmap).
 
 ---
 
@@ -68,8 +68,8 @@ tests/fixtures/      made-up sample data only
 |---|---|---|
 | M0 | Foundations: repo, config, rubric, ATS CV template | ✅ Done |
 | M1 | HubSpot pipeline and properties setup | ✅ Done |
-| M2 | Manual baseline (5 applications timed by hand) | ⏳ Next |
-| M3 | Intake: job boards, capture bookmarklet, paste-a-link form | |
+| M2 | Manual baseline (timed by hand) | ✅ Done (1 application) |
+| M3 | Intake: job boards, capture bookmarklet, paste-a-link form | 🔧 In progress |
 | M4 | Qualify and research | |
 | M5 | Draft: tailored CV, cover letter, messages, truth check | |
 | M6 | Operations: schedules, digest, alerts, dry run | |
@@ -79,7 +79,9 @@ tests/fixtures/      made-up sample data only
 
 ## Results
 
-_To be filled with real measured data after go-live. No invented numbers._
+**Baseline (before automation):** one quality application done fully by hand took **120 minutes**. About 75% of that went on research, CV tailoring, the cover letter and outreach messages, which are the steps the system drafts. At that pace, 5 applications a day would take about 10 hours. Details: [docs/baseline.md](docs/baseline.md) (small sample: 1 application).
+
+_After-launch results will be added from real measured data. No invented numbers._
 
 ## Running locally
 

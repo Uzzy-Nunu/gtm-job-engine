@@ -3,7 +3,8 @@
 Reads the private timing sheet (company names stay private) and prints the
 average time per step and per application. With --write it saves only the
 aggregate numbers to docs/baseline.md for the portfolio. No company or role
-names are ever written to the repo.
+names are ever written to the repo. Samples smaller than 5 are allowed and
+are labelled as small samples in the report.
 
 Usage:
   python scripts/baseline_summary.py                      # reads private/baseline_timing.csv
@@ -23,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SHEET = ROOT / "private" / "baseline_timing.csv"
 OUTPUT = ROOT / "docs" / "baseline.md"
-REQUIRED_APPLICATIONS = 5
+RECOMMENDED_APPLICATIONS = 5  # fewer is allowed; the report says so
 
 # Column -> plain-English step name, in pipeline order (PRD §8).
 STEPS = {
@@ -40,6 +41,21 @@ STEPS = {
 
 class SheetError(ValueError):
     pass
+
+
+MAX_STEP_MINUTES = 8 * 60  # anything longer is almost certainly a typing slip
+
+
+def parse_minutes(text: str) -> float:
+    """Minutes from '12', '12.5', stopwatch 'm:ss' / 'm:ss.cc', or 'h:mm:ss'."""
+    parts = text.strip().split(":")
+    if len(parts) == 1:
+        return float(parts[0])
+    if len(parts) == 2:
+        return float(parts[0]) + float(parts[1]) / 60
+    if len(parts) == 3:
+        return float(parts[0]) * 60 + float(parts[1]) + float(parts[2]) / 60
+    raise ValueError(text)
 
 
 def load_rows(path: Path) -> list[dict[str, float]]:
@@ -61,11 +77,17 @@ def load_rows(path: Path) -> list[dict[str, float]]:
                 if text == "":
                     raise SheetError(f"Row {line_no}: '{col}' is empty (use 0 if no time)")
                 try:
-                    minutes = float(text)
+                    minutes = parse_minutes(text)
                 except ValueError:
-                    raise SheetError(f"Row {line_no}: '{col}' should be a number of minutes, got '{text}'")
+                    raise SheetError(f"Row {line_no}: '{col}' should be minutes (e.g. 12 or 12:30), "
+                                     f"got '{text}'")
                 if minutes < 0:
                     raise SheetError(f"Row {line_no}: '{col}' cannot be negative")
+                if minutes > MAX_STEP_MINUTES:
+                    raise SheetError(
+                        f"Row {line_no}: '{col}' reads as {minutes / 60:.1f} hours ('{text}'). "
+                        "Google Sheets may have turned minutes into hours. Type it as plain "
+                        "minutes, e.g. 30.")
                 row[col] = minutes
             rows.append(row)
     if not rows:
@@ -96,22 +118,37 @@ def summarise(rows: list[dict[str, float]]) -> dict:
 
 def to_markdown(s: dict, today: date | None = None) -> str:
     today = today or date.today()
+    n = s["count"]
     lines = [
         "# Manual baseline (Milestone 2)",
         "",
         f"Time to complete one quality application **fully by hand**, measured over "
-        f"{s['count']} real applications. Recorded {today:%d %b %Y}.",
+        f"{n} real application{'s' if n != 1 else ''}. Recorded {today:%d %b %Y}.",
         "This is the \"before\" number the automated system is compared against (PRD §3).",
         "",
+    ]
+    if n < RECOMMENDED_APPLICATIONS:
+        lines += [
+            f"> **Small sample:** based on {n} application{'s' if n != 1 else ''} "
+            f"(the plan was {RECOMMENDED_APPLICATIONS}). Treat it as an indicative "
+            "baseline, not an average.",
+            "",
+        ]
+    lines += [
         "| | Minutes |",
         "|---|---|",
-        f"| Average per application | **{s['avg_total']:.0f}** |",
-        f"| Median | {s['median_total']:.0f} |",
-        f"| Fastest / slowest | {s['min_total']:.0f} / {s['max_total']:.0f} |",
+        f"| {'Average per application' if n > 1 else 'Total for the application'} | **{s['avg_total']:.0f}** |",
+    ]
+    if n > 1:
+        lines += [
+            f"| Median | {s['median_total']:.0f} |",
+            f"| Fastest / slowest | {s['min_total']:.0f} / {s['max_total']:.0f} |",
+        ]
+    lines += [
         "",
         "## Where the time goes",
         "",
-        "| Step | Avg minutes | Share of time |",
+        f"| Step | {'Avg minutes' if n > 1 else 'Minutes'} | Share of time |",
         "|---|---|---|",
     ]
     for step in s["steps"].values():
@@ -146,13 +183,7 @@ def main(argv=None) -> int:
     report = to_markdown(summary)
     print(report)
 
-    if summary["count"] < REQUIRED_APPLICATIONS:
-        print(f"NOTE: {summary['count']} of {REQUIRED_APPLICATIONS} applications logged. "
-              "Milestone 2 needs 5.")
     if args.write:
-        if summary["count"] < REQUIRED_APPLICATIONS:
-            print("Not writing docs/baseline.md until all 5 are logged.")
-            return 1
         OUTPUT.write_text(report, encoding="utf-8")
         print(f"Wrote {OUTPUT}")
     return 0

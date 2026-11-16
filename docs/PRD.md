@@ -499,6 +499,8 @@ timezone: "Africa/Lagos"
 
 **Decision (14 Nov 2026): M2 runs in parallel with M3 and does not block the build.** Peace completes the 5 timed manual applications while intake is being built. To keep the baseline honest, the timed applications are done before she starts using the capture button or paste form. If that becomes impractical, the PRD will record that the baseline is partial or estimated.
 
+**Decision (16 Nov 2026): the baseline uses 1 timed manual application instead of 5,** so the build is not held up. `docs/baseline.md` labels it as a small sample, and portfolio claims about time saved will say it is based on one application.
+
 ---
 
 ## 18. Risks and mitigations

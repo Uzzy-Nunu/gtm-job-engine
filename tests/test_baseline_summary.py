@@ -61,18 +61,36 @@ def test_non_number_is_reported_with_row(tmp_path):
         bs.load_rows(path)
 
 
+@pytest.mark.parametrize("text,minutes", [
+    ("12", 12), ("12.5", 12.5), ("3:30", 3.5), ("13:43.35", 13 + 43.35 / 60), ("1:05:30", 65.5),
+])
+def test_parse_minutes_accepts_stopwatch_formats(text, minutes):
+    assert bs.parse_minutes(text) == pytest.approx(minutes)
+
+
+def test_hours_slip_is_caught(tmp_path):
+    path = _sheet(tmp_path, "2026-11-16,Role,Co,LinkedIn Post,5,5,5,5,30:00:00,5,5,5,4,")
+    with pytest.raises(bs.SheetError, match="30.0 hours"):
+        bs.load_rows(path)
+
+
 def test_empty_cell_must_be_zero(tmp_path):
     path = _sheet(tmp_path, "2026-11-16,Role,Co,LinkedIn Post,5,,1,1,1,1,1,1,4,")
     with pytest.raises(bs.SheetError, match="use 0"):
         bs.load_rows(path)
 
 
-def test_write_refused_until_five_rows(tmp_path, monkeypatch):
+def test_single_application_is_allowed_and_labelled(tmp_path, monkeypatch):
     out = tmp_path / "baseline.md"
     monkeypatch.setattr(bs, "OUTPUT", out)
-    path = _sheet(tmp_path, "2026-11-16,Role,Co,LinkedIn Post,5,5,5,5,5,5,5,5,4,")
-    assert bs.main([str(path), "--write"]) == 1
-    assert not out.exists()
+    path = _sheet(tmp_path, "2026-11-16,Zebra Role,Quokka Corp,LinkedIn Post,5,5,5,5,5,5,5,5,4,")
+    assert bs.main([str(path), "--write"]) == 0
+    md = out.read_text(encoding="utf-8")
+    assert "1 real application." in md
+    assert "Small sample" in md
+    assert "Total for the application | **40**" in md
+    assert "Median" not in md
+    assert "Quokka" not in md and "Zebra" not in md  # no company or role names
 
 
 def test_write_with_five_rows(tmp_path, monkeypatch):
@@ -80,4 +98,5 @@ def test_write_with_five_rows(tmp_path, monkeypatch):
     monkeypatch.setattr(bs, "OUTPUT", out)
     monkeypatch.setattr(bs, "ROOT", tmp_path)
     assert bs.main([str(SAMPLE), "--write"]) == 0
-    assert "Manual baseline" in out.read_text(encoding="utf-8")
+    md = out.read_text(encoding="utf-8")
+    assert "Manual baseline" in md and "Small sample" not in md

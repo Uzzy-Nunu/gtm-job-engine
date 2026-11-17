@@ -269,6 +269,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 
 | ID | Requirement | Priority |
 |---|---|---|
+| DR-0 | **How truth is enforced (decision 18 Nov 2026):** the master CV is parsed into numbered roles, bullets, projects and certifications (`src/cv_model.py`). The drafting AI only picks ids and rewords; code fills in employers, dates and titles from the master CV and drops anything untraceable ([CONFIRM] or unknown bullets, titles that aren't real or listed variants, skills and tools not in the master CV), then the truth check compares every reworded bullet with its source. Dates are shown exactly as the master CV has them (some are year-only; months are never invented). Logs show counts only; draft files are never published as GitHub artifacts because the repo is public. | P0 |
 | DR-1 | Process `Researched` deals, highest fit score first, up to `daily_draft_cap` (20, set for 15 applications a day; see the §3 decision). | P0 |
 | DR-2 | **Tailored CV:** the AI selects and rewords content **only from the master CV**, following the ATS rules in §12. It returns structured JSON, and the code renders the .docx from the template. | P0 |
 | DR-3 | **Cover letter:** 200–300 words using the company brief and the job's top requirements, truthful, no clichés. Rendered as .docx. | P0 |

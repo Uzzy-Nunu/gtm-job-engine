@@ -33,7 +33,7 @@ def answer(system, prompt, schema):
 def seed(hs, sample_id=None, description=None, **props):
     stage_new = next(s["id"] for s in hs.pipeline["stages"] if s["label"] == "New")
     body = {"dealname": props.pop("dealname", f"LinkedIn post by someone ({sample_id or 'x'})"),
-            "pipeline": "default", "dealstage": stage_new, "job_source": "LinkedIn Post",
+            "pipeline": "default", "dealstage": stage_new, "job_source": props.pop("job_source", "Other"),
             "job_url": props.pop("job_url", f"https://www.linkedin.com/feed/update/urn:li:activity:{abs(hash(sample_id or description)) % 10**19}"),
             "description": description if description is not None else f"Ref {sample_id}. " + BY_ID[sample_id]["description"]}
     body.update(props)
@@ -204,3 +204,43 @@ def test_ai_call_cap_leaves_the_rest_for_the_next_run():
         seed(hs, sid)
     report = qualifier(hs).run(max_ai_calls=2)
     assert len(report.outcomes) == 2 and report.waiting == 1
+
+
+def test_format_retries_are_reported_without_content():
+    hs = FakeHubSpot()
+    seed(hs, "s1")
+    answers = iter([{"job_title": "Secret Title"}, BY_ID["s1"]["ai"]])
+    llm = FakeProvider(lambda s, p, sc: next(answers))
+    report = qualifier(hs, llm).run()
+    line = next(l for l in report.lines() if l.startswith("AI answers retried"))
+    assert "retried for format: 1" in line and "required" in line
+    assert "Secret Title" not in line
+
+
+# --- hand-picked captures (decision 18 Nov 2026) -------------------------------
+
+def test_hand_picked_capture_below_threshold_is_kept():
+    hs = FakeHubSpot()
+    deal_id = seed(hs, "s6", job_source="LinkedIn Post")       # scores 40
+    report = qualifier(hs).run()
+    deal = hs.objects["deals"][deal_id]["properties"]
+    assert hs.stage_label(deal["dealstage"]) == "Qualified"
+    assert int(deal["fit_score"]) == 40
+    assert "Hand-picked by you" in deal["job_analysis"]
+    assert report.outcomes[0].reason == "hand-picked, kept below threshold"
+
+
+def test_hand_picked_capture_still_obeys_hard_filters():
+    hs = FakeHubSpot()
+    us_only = seed(hs, "s2", job_source="LinkedIn Post")
+    hybrid = seed(hs, "s3", job_source="Company Site")
+    qualifier(hs).run()
+    for deal_id in (us_only, hybrid):
+        assert hs.stage_label(hs.objects["deals"][deal_id]["properties"]["dealstage"]) == "Archived"
+
+
+def test_board_imports_still_use_the_threshold():
+    hs = FakeHubSpot()
+    deal_id = seed(hs, "s6", job_source="Himalayas", job_url="https://himalayas.app/x/s6")
+    qualifier(hs).run()
+    assert hs.stage_label(hs.objects["deals"][deal_id]["properties"]["dealstage"]) == "Archived"

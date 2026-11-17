@@ -75,6 +75,8 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 ## Qualifying jobs (Milestone 4)
 - **GitHub:** Actions > **Qualify jobs** > Run workflow. `preview` shows scores and reasons without changing HubSpot; `live` renames deals, fills in Fit Score, Remote Scope and Job Analysis, links the company, and moves each deal to **Qualified** (score >= `fit_threshold`) or **Archived**.
 - **Locally:** `python scripts/qualify_jobs.py --offline` (made-up demo), `--preview`, or live.
+- **Your own captures** (paste form, capture button) are never archived for a low score, only by the hard filters. Their Job Analysis says "Hand-picked by you" when they're below the threshold.
+- **Retries:** the summary shows `AI answers retried for format` with a short reason, and the `AI format mode`. Frequent retries double free-tier usage, so report them.
 - **Skipped deals:** a deal with anything in **Pipeline Error** is skipped (NEEDS POST TEXT, JOB TEXT TOO SHORT, AI ERROR). Fix the cause (for example, paste the job text into Deal description), clear the Pipeline Error field, and the next run picks it up.
 - **Archived by mistake?** Read the reason at the top of **Job Analysis**, then drag the deal back to **New** (and fix the job text if needed) to re-score it, or straight to **Qualified**.
 - **Tuning:** `fit_threshold` and `rubric` points in `config.yaml`; the prompt in `prompts/qualify.md`.

@@ -251,7 +251,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | QU-1 | Process deals in `New`. Pull out job details into strict JSON (see §11.2). | P0 |
 | QU-2 | **Hard filters:** archive if `remote_scope` is Not remote or Country-restricted to a country Peace can't work from, or if the title clearly doesn't match. Record the reason. | P0 |
 | QU-3 | **Fit score (0–100)** using the rubric in §11.3. Store the score and reasons. | P0 |
-| QU-4 | Score ≥ `fit_threshold` (default 70) → `Qualified`. Otherwise → `Archived`. | P0 |
+| QU-4 | Score ≥ `fit_threshold` (default 70) → `Qualified`. Otherwise → `Archived`. **Decision (18 Nov 2026):** jobs Peace captured herself (`LinkedIn Post`, `Company Site`) skip the threshold, because LinkedIn posts rarely state salary or clear remote terms, so even strong posts scored about 53 in the first live preview. They are still scored (for priority) and still archived by the hard filters. Board imports keep the threshold. Configurable via `qualify.hand_picked_sources`. | P0 |
 | QU-6 | **Preview mode:** the Qualify workflow can run in `preview`, reading real New deals and calling the AI but writing nothing, so scores can be checked before going live. | P0 |
 | QU-5 | If the job text is too short or missing (for example a LinkedIn post with no description), try to fetch the apply URL's page text. If it's still missing, flag `pipeline_error` and leave it for manual review. | P1 |
 

@@ -40,6 +40,18 @@ def _parse_json(text: str):
     return json.loads(text)
 
 
+def _describe(error) -> str:
+    """A short reason an answer was rejected, without echoing its content
+    (safe for public logs): e.g. "maxItems at fit_reasons", "required at (top)"."""
+    if isinstance(error, jsonschema.ValidationError):
+        where = "/".join(str(p) for p in error.absolute_path) or "(top)"
+        detail = ""
+        if error.validator == "required":
+            detail = " " + str(error.message).split("'")[1] if "'" in str(error.message) else ""
+        return f"{error.validator}{detail} at {where}"
+    return "not valid JSON"
+
+
 def _retry_delay(resp) -> float | None:
     """Seconds to wait, from Retry-After or Gemini's RetryInfo ("13s")."""
     header = resp.headers.get("Retry-After") if resp is not None else None
@@ -73,6 +85,7 @@ class BaseProvider:
         self._clock = clock
         self._last = None
         self.calls = 0
+        self.format_problems: list[str] = []  # short, content-free reasons answers were retried
 
     # --- public ---------------------------------------------------------
     def generate_json(self, *, system: str, prompt: str, schema: dict, role: str = "fast") -> dict:
@@ -90,6 +103,7 @@ class BaseProvider:
                 return data
             except (ValueError, jsonschema.ValidationError) as e:
                 problem = str(e).splitlines()[0][:200]
+                self.format_problems.append(_describe(e))
         raise LLMError(f"AI returned invalid output twice: {problem}")
 
     # --- internals ------------------------------------------------------

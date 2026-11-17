@@ -17,6 +17,7 @@ class Verdict:
     qualified: bool
     archive_reason: str | None = None
     breakdown: list[tuple[str, int]] = field(default_factory=list)
+    note: str | None = None
 
 
 def hard_filter(facts: dict, config: dict) -> str | None:
@@ -35,7 +36,9 @@ def hard_filter(facts: dict, config: dict) -> str | None:
     return None
 
 
-def score(facts: dict, config: dict) -> Verdict:
+def score(facts: dict, config: dict, hand_picked: bool = False) -> Verdict:
+    """Hard filters, then the rubric. Hand-picked jobs (captured by Peace)
+    skip the score threshold but never the hard filters (decision 18 Nov 2026)."""
     rubric = config.get("rubric") or {}
     threshold = int(config.get("fit_threshold", 70))
     reason = hard_filter(facts, config)
@@ -80,8 +83,12 @@ def score(facts: dict, config: dict) -> Verdict:
                   rubric.get("salary_listed", 10) if facts.get("salary_text") else 0))
 
     total = min(100, sum(p for _, p in parts))
-    return Verdict(total, total >= threshold, None if total >= threshold else
-                   f"Fit score {total} is below the threshold of {threshold}.", parts)
+    if total >= threshold:
+        return Verdict(total, True, None, parts)
+    if hand_picked:
+        return Verdict(total, True, None, parts,
+                       note=f"Hand-picked by you: kept although the score is below {threshold}.")
+    return Verdict(total, False, f"Fit score {total} is below the threshold of {threshold}.", parts)
 
 
 def analysis_text(facts: dict, verdict: Verdict, threshold: int) -> str:
@@ -90,6 +97,8 @@ def analysis_text(facts: dict, verdict: Verdict, threshold: int) -> str:
     lines = [f"Fit score: {verdict.score}/100 (threshold {threshold}) -> {status}"]
     if verdict.archive_reason:
         lines.append(f"Reason: {verdict.archive_reason}")
+    if verdict.note:
+        lines.append(f"Note: {verdict.note}")
     lines.append("Score: " + " | ".join(f"{label} +{points}" for label, points in verdict.breakdown))
     if facts.get("fit_reasons"):
         lines.append("Why:")

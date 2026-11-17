@@ -91,6 +91,8 @@ class QualifyReport:
     waiting: int = 0       # New deals left for the next run
     stopped: str | None = None
     ai_calls: int = 0
+    format_problems: list[str] = field(default_factory=list)
+    schema_mode: str = ""
 
     def count(self, status):
         return sum(1 for o in self.outcomes if o.status == status)
@@ -105,6 +107,11 @@ class QualifyReport:
                f"AI requests: {self.ai_calls} | left for next run: {self.waiting}"]
         if self.stopped:
             out.append(f"! Stopped early: {self.stopped}")
+        if self.format_problems:
+            out.append(f"AI answers retried for format: {len(self.format_problems)} "
+                       f"({'; '.join(sorted(set(self.format_problems)))})")
+        if self.schema_mode:
+            out.append(f"AI format mode: {self.schema_mode}")
         for o in self.outcomes:
             score_txt = f"{o.score:>3}" if o.score is not None else "  -"
             out.append(f"  {o.status:<9} {score_txt}  {public_name(o.new_name, o.deal_id)}"
@@ -209,6 +216,10 @@ class Qualifier:
                 continue
             report.outcomes.append(self._apply(deal, props, facts))
         report.ai_calls = self.llm.calls
+        report.format_problems = list(getattr(self.llm, "format_problems", []))
+        if hasattr(self.llm, "use_schema"):
+            report.schema_mode = ("schema enforced by the API" if self.llm.use_schema
+                                  else "plain JSON (API rejected the schema field)")
         return report
 
     def _prompt(self, text: str) -> str:
@@ -219,7 +230,9 @@ class Qualifier:
 
     def _apply(self, deal: dict, props: dict, facts: dict) -> Outcome:
         threshold = int(self.config.get("fit_threshold", 70))
-        verdict = score(facts, self.config)
+        picked = (props.get("job_source") or "") in (
+            (self.config.get("qualify") or {}).get("hand_picked_sources") or ["LinkedIn Post", "Company Site"])
+        verdict = score(facts, self.config, hand_picked=picked)
         old = props.get("dealname") or deal["id"]
         title = (facts.get("job_title") or "").strip()
         company = (facts.get("company_name") or "").strip()
@@ -239,7 +252,8 @@ class Qualifier:
         if company and self.write:
             self._link_company(deal["id"], company, facts.get("company_domain"), apply_url or props.get("apply_url"))
         return Outcome(deal["id"], old, new, status, verdict.score,
-                       "" if verdict.qualified else (verdict.archive_reason or ""))
+                       ("hand-picked, kept below threshold" if verdict.note else "")
+                       if verdict.qualified else (verdict.archive_reason or ""))
 
     def _link_company(self, deal_id, name, domain, apply_url):
         domain = _clean_domain(domain) or _domain_from(apply_url)

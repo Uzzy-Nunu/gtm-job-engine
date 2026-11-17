@@ -103,6 +103,11 @@ eligible_regions:
 
 # --- Fit score rubric (PRD §11.3) ------------------------------------
 fit_threshold: 70          # score >= this -> Qualified, else Archived
+qualify:
+  # Jobs Peace captured herself (paste form, capture button) skip the score
+  # threshold: they're still scored and still archived by the hard filters
+  # (not remote, ineligible region, excluded title). Board imports use the threshold.
+  hand_picked_sources: [LinkedIn Post, Company Site]
 
 rubric:
   remote:

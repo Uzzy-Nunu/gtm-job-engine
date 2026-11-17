@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { handle, sameSecret } from "../src/index.js";
+import { similarText } from "../src/intake.js";
 import { bookmarkletCode } from "../src/pages.js";
 import { createFakeHubSpot } from "./fake-hubspot.js";
 
@@ -194,4 +195,66 @@ test("server errors say what went wrong (no secrets)", async () => {
   assert.equal(resp.status, 500);
   assert.match(body.message, /HUBSPOT_TOKEN is not set/);
   assert.ok(!body.message.includes(SECRET));
+});
+
+// --- one post, two LinkedIn IDs (activity vs ugcPost) ---------------------
+const POST_ACTIVITY = "https://www.linkedin.com/posts/jane-doe-123_hiring-activity-7390000000000000001-AbCd";
+const POST_UGC = "https://www.linkedin.com/posts/jane-doe-123_hiring-gtm-ugcPost-7391111111111111111-Zz9Y?utm_source=share";
+
+test("same post captured with its other ID and no text is a duplicate (Peace's case)", async () => {
+  const { hs, send } = setup();
+  const first = await send({ url: POST_ACTIVITY, text: TEXT });
+  const again = await send({ url: POST_UGC });
+  assert.equal(again.body.status, "duplicate");
+  assert.equal(again.body.dealId, first.body.dealId);
+  assert.match(again.body.message, /same post as a recent capture/);
+  assert.equal(hs.all("deals").length, 1);
+});
+
+test("link-only capture is filled in when the same post arrives with its other ID", async () => {
+  const { hs, send } = setup();
+  const first = await send({ url: POST_UGC });
+  const later = await send({ url: POST_ACTIVITY, text: TEXT });
+  assert.equal(later.body.status, "updated");
+  assert.equal(later.body.dealId, first.body.dealId);
+  assert.equal(hs.all("deals")[0].properties.pipeline_error, "");
+  assert.equal(hs.all("deals")[0].properties.description, TEXT);
+});
+
+test("same poster, same text with different wording around it is still a duplicate", async () => {
+  const { hs, send } = setup();
+  await send({ url: POST_ACTIVITY, text: TEXT });
+  const again = await send({ url: POST_UGC, text: `${TEXT} #hiring #remote` });
+  assert.equal(again.body.status, "duplicate");
+  assert.equal(hs.all("deals").length, 1);
+});
+
+test("same poster, a genuinely different post (different text) makes a new deal", async () => {
+  const { hs, send } = setup();
+  await send({ url: POST_ACTIVITY, text: TEXT });
+  const other = await send({ url: POST_UGC, text: "Also hiring a Lifecycle Marketing Manager in Berlin, on-site, five days a week." });
+  assert.equal(other.body.status, "created");
+  assert.equal(hs.all("deals").length, 2);
+  assert.equal(hs.all("contacts").length, 1);
+});
+
+test("same poster after more than 14 days is treated as a new post", async () => {
+  const { hs, send } = setup();
+  await send({ url: POST_ACTIVITY, text: TEXT });
+  const later = Date.now() + 15 * 24 * 60 * 60 * 1000;
+  hs.state.now = () => later;
+  const RealNow = Date.now;
+  Date.now = () => later;
+  try {
+    const again = await send({ url: POST_UGC });
+    assert.equal(again.body.status, "created");
+  } finally {
+    Date.now = RealNow;
+  }
+});
+
+test("similarText measures shared words", () => {
+  assert.equal(similarText("Hiring a GTM Engineer", "hiring a gtm engineer!"), 1);
+  assert.ok(similarText("Hiring a GTM Engineer remote", "We sell cheese in Paris") < 0.2);
+  assert.equal(similarText("", "anything"), 0);
 });

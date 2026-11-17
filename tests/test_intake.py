@@ -191,3 +191,52 @@ def test_missing_pipeline_is_a_loud_error():
     result = Intake(hs).submit(Submission(url=POST, text=POST_TEXT))
     assert result.status == "error"
     assert "Run Setup HubSpot" in result.message
+
+
+# --- one post, two LinkedIn IDs (activity vs ugcPost) ---------------------
+POST_ACTIVITY = "https://www.linkedin.com/posts/jane-doe-123_hiring-activity-7390000000000000001-AbCd"
+POST_UGC = "https://www.linkedin.com/posts/jane-doe-123_hiring-gtm-ugcPost-7391111111111111111-Zz9Y?utm_source=share"
+
+
+def test_same_post_with_its_other_id_and_no_text_is_a_duplicate():
+    hs, intake = setup()
+    first = intake.submit(Submission(url=POST_ACTIVITY, text=POST_TEXT))
+    again = intake.submit(Submission(url=POST_UGC))
+    assert again.status == "duplicate"
+    assert again.deal_id == first.deal_id
+    assert "same post as a recent capture" in again.message
+    assert len(hs.all("deals")) == 1
+
+
+def test_link_only_capture_is_filled_in_by_the_other_id_with_text():
+    hs, intake = setup()
+    first = intake.submit(Submission(url=POST_UGC))
+    later = intake.submit(Submission(url=POST_ACTIVITY, text=POST_TEXT))
+    assert later.status == "updated"
+    assert later.deal_id == first.deal_id
+    deal = hs.all("deals")[0]["properties"]
+    assert deal["description"] == POST_TEXT and deal["pipeline_error"] == ""
+
+
+def test_same_poster_different_post_text_makes_a_new_deal():
+    hs, intake = setup()
+    intake.submit(Submission(url=POST_ACTIVITY, text=POST_TEXT))
+    other = intake.submit(Submission(url=POST_UGC, text="Also hiring a Lifecycle Marketing Manager in Berlin, on-site."))
+    assert other.status == "created"
+    assert len(hs.all("deals")) == 2
+    assert len(hs.all("contacts")) == 1
+
+
+def test_same_poster_after_the_window_is_a_new_post():
+    hs = FakeHubSpot()
+    Intake(hs).submit(Submission(url=POST_ACTIVITY, text=POST_TEXT))
+    later = datetime.now(timezone.utc) + timedelta(days=15)
+    result = Intake(hs, now=lambda: later).submit(Submission(url=POST_UGC))
+    assert result.status == "created"
+
+
+def test_similar_text():
+    from src.intake import similar_text
+    assert similar_text("Hiring a GTM Engineer", "hiring a gtm engineer!") == 1
+    assert similar_text("Hiring a GTM Engineer remote", "We sell cheese in Paris") < 0.2
+    assert similar_text("", "anything") == 0

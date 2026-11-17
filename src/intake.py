@@ -17,6 +17,7 @@ Safe to re-run: the same submission twice never makes two deals (OP-4).
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -27,6 +28,33 @@ from src.urls import (URLError, company_domain, find_external_job_links,
                       is_linkedin, normalise_url, parse_linkedin_post)
 
 MAX_TEXT = 60_000  # HubSpot multi-line text limit is 65,536 characters
+NOTES_MARKER = "\n\n--- Notes from Peace ---"
+SAME_TEXT_THRESHOLD = 0.6  # share of words in common
+
+# LinkedIn gives one post two different IDs (the address bar shows an
+# "activity" ID, "Copy link to post" often a "ugcPost" ID), so the URL alone
+# can't always spot a repeat. A recent capture from the same poster counts as
+# the same post when either side has no text yet, or the texts mostly match.
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"\w+", (text or "").lower()))
+
+
+def similar_text(a: str, b: str) -> float:
+    x, y = _words(a), _words(b)
+    if not x or not y:
+        return 0.0
+    return len(x & y) / min(len(x), len(y))
+
+
+def _post_text(description: str | None) -> str:
+    return (description or "").split(NOTES_MARKER)[0].strip()
+
+
+def ms(dt: datetime) -> str:
+    """HubSpot search compares dates as milliseconds since 1970."""
+    return str(int(dt.timestamp() * 1000))
 
 ATS_SOURCES = {"greenhouse.io": "Greenhouse", "lever.co": "Lever", "ashbyhq.com": "Ashby",
                "remoteok.com": "RemoteOK", "himalayas.app": "Himalayas",
@@ -122,14 +150,20 @@ class Intake:
                                     ["dealname", "pipeline_error", "description"])
         if existing:
             return self._handle_existing(existing, text, notes)
+        if post and post.profile_url:
+            twin = self._same_poster_twin(post, text)
+            if twin:
+                return self._handle_existing(
+                    twin, text, notes,
+                    "Looks like the same post as a recent capture from this poster "
+                    "(LinkedIn gives one post two different links).")
 
         # 3. Cross-source duplicate (same title + company, recent)
         deal_name = self._deal_name(sub, post, key)
         if sub.title and sub.company:
-            since = (self._now() - self.window).strftime("%Y-%m-%dT%H:%M:%SZ")
             twin = self._search_one("deals", [
                 {"propertyName": "dealname", "operator": "EQ", "value": deal_name},
-                {"propertyName": "createdate", "operator": "GTE", "value": since},
+                {"propertyName": "createdate", "operator": "GTE", "value": ms(self._now() - self.window)},
             ], ["dealname"])
             if twin:
                 return Result("duplicate", f"Same role already captured from another source "
@@ -154,7 +188,7 @@ class Intake:
 
         description = text
         if notes:
-            description = f"{text}\n\n--- Notes from Peace ---\n{notes}".strip()
+            description = f"{text}{NOTES_MARKER}\n{notes}".strip()
 
         props = {
             "dealname": deal_name,
@@ -189,15 +223,39 @@ class Intake:
             msg += " No post text yet: paste it into the deal's description when you can."
         return Result("created", msg, deal_id, flags)
 
-    def _handle_existing(self, deal, text, notes) -> Result:
+    def _handle_existing(self, deal, text, notes, lead: str = "Already captured.") -> Result:
         props = deal.get("properties", {})
         waiting = (props.get("pipeline_error") or "").startswith(NEEDS_POST_TEXT)
         if waiting and text:
-            description = text if not notes else f"{text}\n\n--- Notes from Peace ---\n{notes}"
+            description = f"{text}{NOTES_MARKER}\n{notes}" if notes else text
             self.hs.patch(f"/crm/v3/objects/deals/{deal['id']}", {"properties": {
                 "description": description[:MAX_TEXT], "pipeline_error": ""}})
-            return Result("updated", "Already captured. Added the post text you sent.", deal["id"])
-        return Result("duplicate", "Already captured. No new deal created.", deal["id"])
+            return Result("updated", f"{lead} Added the post text you sent.", deal["id"])
+        message = f"{lead} No new deal created."
+        if not text and not lead.startswith("Already"):
+            message += " If this is a different post, paste its text and save again."
+        return Result("duplicate", message, deal["id"])
+
+    def _same_poster_twin(self, post, text):
+        contact = self._search_one("contacts", [{"propertyName": CONTACT_LINKEDIN_PROPERTY,
+                                                 "operator": "EQ", "value": post.profile_url}])
+        if not contact:
+            return None
+        found = self.hs.post("/crm/v3/objects/deals/search", {
+            "filterGroups": [{"filters": [
+                {"propertyName": "associations.contact", "operator": "EQ", "value": contact["id"]},
+                {"propertyName": "job_source", "operator": "EQ", "value": "LinkedIn Post"},
+                {"propertyName": "createdate", "operator": "GTE", "value": ms(self._now() - self.window)},
+            ]}],
+            "properties": ["dealname", "pipeline_error", "description"],
+            "sorts": [{"propertyName": "createdate", "direction": "DESCENDING"}],
+            "limit": 10,
+        })
+        for deal in (found or {}).get("results", []):
+            earlier = _post_text(deal.get("properties", {}).get("description"))
+            if not text or not earlier or similar_text(earlier, text) >= SAME_TEXT_THRESHOLD:
+                return deal
+        return None
 
     def _deal_name(self, sub, post, key) -> str:
         if sub.title and sub.company:

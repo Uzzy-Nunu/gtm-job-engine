@@ -54,11 +54,14 @@ function store(k,v){try{v===null?localStorage.removeItem(k):localStorage.setItem
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function showKey(show){$("keybox").hidden=!show;$("key").required=show;$("forget").hidden=show}
 showKey(!load(KEY));
-const h=new URLSearchParams(location.hash.slice(1));
-if(h.get("u")){$("url").value=h.get("u")}if(h.get("t")){$("text").value=h.get("t")}
-if(location.hash){history.replaceState(null,"",location.pathname)}
 $("forget").onclick=()=>{store(KEY,null);showKey(true);$("key").focus()};
 function say(cls,text){const m=$("msg");m.className="msg show "+cls;m.textContent=text}
+// Prefill from the capture button. Runs on load AND whenever the button
+// reuses this open window with a new link (that only changes the #fragment).
+function prefill(){if(!location.hash)return;const h=new URLSearchParams(location.hash.slice(1));
+  if(h.has("u")){$("url").value=h.get("u")||"";$("text").value=h.get("t")||"";$("notes").value="";$("msg").className="msg"}
+  history.replaceState(null,"",location.pathname);window.focus()}
+prefill();window.addEventListener("hashchange",prefill);
 $("f").onsubmit=async e=>{e.preventDefault();
   const key=$("key").value||load(KEY);if(!key){showKey(true);return}
   $("go").disabled=true;say("","Saving...");

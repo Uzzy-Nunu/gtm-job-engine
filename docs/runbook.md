@@ -57,6 +57,8 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Laptop:** install the **+ Capture job** button from `/bookmarklet`. On a post, highlight the text, click the button, then **Save to HubSpot**.
 - Replies: **Saved** (new deal), **Already captured** (duplicate), **Added the post text** (fills in an earlier link-only capture), or an error explaining what to do.
 - The access key is asked for once per browser. "Use a different access key" clears it.
+- **Same post, different link:** LinkedIn gives one post two IDs (address bar vs "Copy link to post"). A second capture of the same poster's post within 14 days is recognised and says "Looks like the same post…". If it really is a different post, paste its text and save again.
+- **Poster details come from the link.** Links from "Copy link to post" (`linkedin.com/posts/<name>_...`) include the poster; address-bar links like `linkedin.com/feed/update/...` don't, so those deals have no poster contact.
 - **Redeploying:** Actions > **Deploy Worker** > Run workflow. Do this after changing the Worker code or the `CAPTURE_SECRET` / `HUBSPOT_TOKEN` secrets.
 - **Errors:** Cloudflare dashboard > Workers & Pages > `gtm-job-engine-capture` > **Logs**.
 

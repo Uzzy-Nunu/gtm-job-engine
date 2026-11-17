@@ -160,7 +160,7 @@ def to_submission(job: JobPosting, title_list: str = "target") -> Submission:
 
 def imported_today(hs, tz: str, now: datetime) -> int:
     local_midnight = datetime.combine(now.astimezone(ZoneInfo(tz)).date(), time.min, ZoneInfo(tz))
-    since = local_midnight.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    since = str(int(local_midnight.timestamp() * 1000))  # HubSpot compares dates in ms
     found = hs.post("/crm/v3/objects/deals/search", {
         "filterGroups": [{"filters": [
             {"propertyName": "createdate", "operator": "GTE", "value": since},

@@ -131,8 +131,12 @@ class FakeHubSpot:
         self.objects[obj][oid] = record
         return copy.deepcopy(record)
 
-    def _matches(self, record, flt) -> bool:
-        value = record["properties"].get(flt["propertyName"])
+    def _matches(self, record, flt, obj=None) -> bool:
+        name = flt["propertyName"]
+        if name.startswith("associations."):  # e.g. deals linked to a contact
+            other = name.split(".", 1)[1] + "s"
+            return (obj, record["id"], other, str(flt.get("value"))) in self.associations
+        value = record["properties"].get(name)
         op = flt["operator"]
         target = flt.get("value")
         if op == "EQ":
@@ -158,7 +162,7 @@ class FakeHubSpot:
     def _search(self, obj, body):
         groups = body.get("filterGroups") or [{"filters": []}]
         hits = [rec for rec in self.objects[obj].values()
-                if any(all(self._matches(rec, f) for f in g.get("filters", [])) for g in groups)]
+                if any(all(self._matches(rec, f, obj) for f in g.get("filters", [])) for g in groups)]
         for sort in reversed(body.get("sorts", [])):
             key = sort.get("propertyName")
             hits.sort(key=lambda r: (r["properties"].get(key) is None, r["properties"].get(key) or ""),

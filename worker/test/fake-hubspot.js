@@ -11,6 +11,7 @@ export function createFakeHubSpot() {
     associations: new Set(),
     pipeline: { id: "default", label: "Job Applications", stages: STAGES.map((label, i) => ({ id: `stage${i}`, label })) },
     calls: [],
+    now: () => Date.now(),   // tests can move the clock
   };
   const reply = (status, body) => new Response(body === undefined ? "" : JSON.stringify(body), { status });
   const all = (obj) => Object.values(state.objects[obj]);
@@ -28,8 +29,20 @@ export function createFakeHubSpot() {
       const obj = parts[3];
       if (method === "POST" && parts[4] === "search") {
         const filters = body.filterGroups[0].filters;
-        const hits = all(obj).filter((rec) => filters.every((f) =>
-          String(rec.properties[f.propertyName] ?? "").toLowerCase() === String(f.value).toLowerCase()));
+        const matches = (rec, f) => {
+          if (f.propertyName.startsWith("associations.")) {
+            const other = f.propertyName.split(".")[1] + "s";
+            return state.associations.has(`${obj}:${rec.id}->${other}:${f.value}`);
+          }
+          const value = rec.properties[f.propertyName];
+          if (f.operator === "GTE") return Number(value) >= Number(f.value);
+          return String(value ?? "").toLowerCase() === String(f.value).toLowerCase();
+        };
+        let hits = all(obj).filter((rec) => filters.every((f) => matches(rec, f)));
+        if (body.sorts?.[0]?.direction === "DESCENDING") {
+          const key = body.sorts[0].propertyName;
+          hits = [...hits].sort((a, b) => Number(b.properties[key]) - Number(a.properties[key]));
+        }
         return reply(200, { total: hits.length, results: hits.slice(0, body.limit ?? 10) });
       }
       if (method === "POST" && parts.length === 4) {
@@ -37,7 +50,7 @@ export function createFakeHubSpot() {
           return reply(409, { message: "duplicate job_url", category: "CONFLICT" });
         }
         const id = String(nextId++);
-        state.objects[obj][id] = { id, properties: { ...body.properties } };
+        state.objects[obj][id] = { id, properties: { ...body.properties, createdate: String(state.now()) } };
         return reply(201, state.objects[obj][id]);
       }
       if (method === "PATCH" && parts.length === 5) {

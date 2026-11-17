@@ -20,8 +20,12 @@ Rules:
 - suggested_contact_titles: 2 or 3 job titles of people likely to own this hire or
   team (for example "Head of Growth", "VP Revenue Operations", "Founder"). Titles
   only, never names.
-- website_was_useful: false if the website text was missing, blocked or unrelated,
-  so the brief relies on the job posting alone.
+- website_matches_company: true only if the website clearly belongs to the company
+  that posted this job (same business, product or market). False if it is a
+  different company with a similar name, a parked page, or unrelated. If false,
+  ignore the website text completely and write the brief from the job posting.
+- website_was_useful: false if the website text was missing, blocked, unrelated or
+  didn't match the company, so the brief relies on the job posting alone.
 
 ## USER
 COMPANY: {company}

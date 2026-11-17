@@ -27,6 +27,7 @@ from src.qualify import _robots_allows, load_prompt, public_name
 from src.redact import redact, strip_notes
 from src.sources.base import html_to_text
 from src.urls import is_linkedin
+from src.website_finder import WebsiteFinder
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_FILE = ROOT / "prompts" / "research.md"
@@ -37,11 +38,13 @@ BRIEF_MARKER = "\n\nCompany brief:"
 
 SCHEMA = {
     "type": "object",
-    "required": ["brief_bullets", "cover_letter_angle", "suggested_contact_titles", "website_was_useful"],
+    "required": ["brief_bullets", "cover_letter_angle", "suggested_contact_titles",
+                 "website_matches_company", "website_was_useful"],
     "properties": {
         "brief_bullets": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 5},
         "cover_letter_angle": {"type": "string"},
         "suggested_contact_titles": {"type": "array", "items": {"type": "string"}, "minItems": 2, "maxItems": 3},
+        "website_matches_company": {"type": "boolean"},
         "website_was_useful": {"type": "boolean"},
     },
 }
@@ -91,13 +94,16 @@ def brief_text(answer: dict) -> str:
 
 
 class Researcher:
-    def __init__(self, hubspot, llm, config: dict, http=None, write: bool = True, robots_ok=None):
+    def __init__(self, hubspot, llm, config: dict, http=None, write: bool = True, robots_ok=None,
+                 finder_http=None):
         self.hs = hubspot
         self.llm = llm
         self.config = config
         self.http = http
         self.write = write
         self.robots_ok = robots_ok or _robots_allows
+        finder_http = finder_http or http
+        self.finder = WebsiteFinder(finder_http, llm, self.robots_ok) if finder_http is not None else None
         self.system, self.user_template = load_prompt(PROMPT_FILE)
         self.stage = {}
         self.pipeline_id = None
@@ -169,7 +175,11 @@ class Researcher:
                 break
             company = self.company_of(deal["id"])
             company_name = company.get("name") or (name.split(" - ", 1)[1] if " - " in name else "unknown")
-            website = self.website_text(company.get("domain"))
+            found = None  # (domain, how) for a website discovered this run
+            if company.get("domain"):
+                website = self.website_text(company.get("domain"))
+            else:
+                website, found = self._find_website(props, company_name, name)
             prompt = (self.user_template
                       .replace("{company}", company_name)
                       .replace("{website}", redact(website) or "(no website text available)")
@@ -186,12 +196,44 @@ class Researcher:
                                   {"properties": {"pipeline_error": f"AI ERROR (research): {str(e)[:400]}"}})
                 report.outcomes.append(ResearchOutcome(deal["id"], name, "error", str(e)[:120]))
                 continue
-            self._save(deal, props, company, answer)
             note = "" if answer.get("website_was_useful") else "brief from job posting only"
+            if found:
+                if answer.get("website_matches_company"):
+                    self._save_domain(deal, company, company_name, found[0])
+                    note = f"website found via {found[1]}: {found[0]}"
+                else:
+                    note = f"rejected {found[0]} (a different company); brief from job posting only"
+            self._save(deal, props, company, answer)
             report.outcomes.append(ResearchOutcome(deal["id"], name, "Researched", note))
         report.ai_calls = self.llm.calls
         report.busy_retries = getattr(self.llm, "busy_retries", 0)
         return report
+
+    def _find_website(self, props, company_name, deal_name):
+        """Find and verify a candidate website. Returns (homepage text, (domain, how)) or ("", None).
+        Nothing is saved until the research AI confirms it's the same company."""
+        if self.finder is None or company_name == "unknown":
+            return "", None
+        job_title = deal_name.split(" - ", 1)[0]
+        domain, text, how = self.finder.find(company_name, job_title,
+                                             raw_text=props.get("description") or "",
+                                             apply_url=props.get("apply_url"))
+        if not domain:
+            return "", None
+        if len(text) < SHORT_HOMEPAGE:
+            text = self.website_text(domain) or text
+        return text[:MAX_WEBSITE], (domain, how)
+
+    def _save_domain(self, deal, company, company_name, domain):
+        if not self.write:
+            return
+        if company.get("id"):
+            self.hs.patch(f"/crm/v3/objects/companies/{company['id']}", {"properties": {"domain": domain}})
+        else:
+            created = self.hs.post("/crm/v3/objects/companies",
+                                   {"properties": {"name": company_name, "domain": domain}})
+            company["id"] = created["id"]
+            self.hs.put(f"/crm/v4/objects/deals/{deal['id']}/associations/default/companies/{created['id']}")
 
     def _save(self, deal, props, company, answer):
         if not self.write:

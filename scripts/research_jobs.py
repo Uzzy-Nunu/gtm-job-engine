@@ -48,9 +48,12 @@ def offline_setup():
             hs.put(f"/crm/v4/objects/deals/{deal['id']}/associations/default/companies/{company['id']}")
 
     def answer(system, prompt, schema):
+        if "official website domain" in prompt:   # the website finder's question
+            return {"domain": None}
         useful = "Revenue analytics" in prompt
         return {"brief_bullets": ["Made-up point one.", "Made-up point two.", "Made-up point three."],
                 "cover_letter_angle": "Made-up angle.", "website_was_useful": useful,
+                "website_matches_company": useful,
                 "suggested_contact_titles": ["Head of Growth", "Founder"]}
 
     return hs, FakeProvider(answer), OfflineHttp()
@@ -69,15 +72,18 @@ def main(argv=None) -> int:
     max_calls = int((config.get("llm") or {}).get("max_ai_calls_per_run", 40))
     if args.offline:
         hs, llm, http = offline_setup()
+        finder_http = http
         label, write = "OFFLINE DEMO (made-up data, fake AI, fake HubSpot)", True
     else:
         load_dotenv(ROOT / ".env")
         hs, llm, http = HubSpotClient(), make_llm(config), Http()
+        finder_http = Http(timeout=10, retries=0, min_interval=0.5)  # quick checks of guessed sites
         label = "PREVIEW (real data and AI, nothing written)" if args.preview else "LIVE (updates HubSpot)"
         write = not args.preview
 
     print(f"== Research jobs: {label}")
-    report = Researcher(hs, llm, config, http=http, write=write).run(max_ai_calls=max_calls)
+    report = Researcher(hs, llm, config, http=http, write=write,
+                        finder_http=finder_http).run(max_ai_calls=max_calls)
     lines = report.lines()
     print("\n".join(lines))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")

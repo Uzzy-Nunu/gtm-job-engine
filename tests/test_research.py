@@ -17,6 +17,7 @@ ANSWER = {
                       "Series A, about 40 people."],
     "cover_letter_angle": "They are building their first outbound engine, which matches GTM engineering work.",
     "suggested_contact_titles": ["Head of Growth", "VP Revenue Operations"],
+    "website_matches_company": True,
     "website_was_useful": True,
 }
 HOMEPAGE = ("<html><head><script>track()</script></head><body><h1>SampleCorp</h1>"
@@ -100,8 +101,9 @@ def test_no_company_or_blocked_site_still_gets_a_brief_from_the_posting():
     answer = dict(ANSWER, website_was_useful=False)
     llm = FakeProvider(lambda s, p, sc: answer)
     report = researcher(hs, llm, http=http, robots_ok=lambda u: "blocked" not in u).run()
-    assert http.asked == []
-    assert "(no website text available)" in llm.prompts[0]
+    assert not any("blocked" in u for u in http.asked)      # robots.txt said no
+    assert any("demo" in u for u in http.asked)              # tried to find Demo Co's site, none verified
+    assert any("(no website text available)" in prompt for prompt in llm.prompts)
     for deal_id in (no_company, blocked):
         deal = hs.objects["deals"][deal_id]["properties"]
         assert hs.stage_label(deal["dealstage"]) == "Researched"

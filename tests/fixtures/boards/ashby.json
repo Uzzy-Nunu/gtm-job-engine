@@ -1,0 +1,14 @@
+{
+  "_comment": "MADE-UP sample in Ashby posting API format.",
+  "apiVersion": "1",
+  "jobs": [
+    {"id": "ab-1", "title": "AI Operations Lead", "location": "Remote", "secondaryLocations": [{"location": "Africa"}],
+     "isListed": true, "isRemote": true, "workplaceType": "Remote", "publishedAt": "2026-11-15T10:00:00Z",
+     "jobUrl": "https://jobs.ashbyhq.com/fictional/ab-1", "applyUrl": "https://jobs.ashbyhq.com/fictional/ab-1/application",
+     "descriptionPlain": "Run AI workflows across sales and marketing.",
+     "compensation": {"compensationTierSummary": "$60K - $80K"}},
+    {"id": "ab-2", "title": "GTM Engineer", "location": "Remote", "isListed": false, "isRemote": true,
+     "workplaceType": "Remote", "publishedAt": "2026-11-15T10:00:00Z",
+     "jobUrl": "https://jobs.ashbyhq.com/fictional/ab-2", "descriptionPlain": "Unlisted."}
+  ]
+}

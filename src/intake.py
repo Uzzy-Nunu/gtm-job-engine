@@ -30,7 +30,7 @@ MAX_TEXT = 60_000  # HubSpot multi-line text limit is 65,536 characters
 
 ATS_SOURCES = {"greenhouse.io": "Greenhouse", "lever.co": "Lever", "ashbyhq.com": "Ashby",
                "remoteok.com": "RemoteOK", "himalayas.app": "Himalayas",
-               "weworkremotely.com": "WWR"}
+               "weworkremotely.com": "WWR", "remotive.com": "Remotive", "jobicy.com": "Jobicy"}
 
 
 @dataclass
@@ -202,6 +202,8 @@ class Intake:
     def _deal_name(self, sub, post, key) -> str:
         if sub.title and sub.company:
             return f"{sub.title.strip()} - {sub.company.strip()}"
+        if sub.title:  # company is filled in later by the Qualify step
+            return f"{sub.title.strip()} - company TBC"
         if post:
             who = post.name_guess or "unknown poster"
             return f"LinkedIn post by {who} ({post.post_id[-6:]})"

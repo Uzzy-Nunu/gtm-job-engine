@@ -54,6 +54,8 @@ Move from 5 to 15 applications a day only when all of these are true:
 
 To scale up, raise `daily_draft_cap` and `daily_import_cap` in `config.yaml` (see §16), and move the AI to a paid tier if free-tier limits get in the way (§11.1). No code changes are needed.
 
+**Decision (17 Nov 2026): the caps are set for 15 a day from the start** (`daily_import_cap: 100`, `daily_draft_cap: 20`), so the system doesn't need revisiting after launch. The scale-up criteria above become **quality checks to monitor** rather than gates. In the first weeks, watch the truth-check pass rate and Peace's edit time. If drafts need too much editing, lower `daily_draft_cap` (a config change). The practical limit is job supply: about 40+ incoming jobs a day are needed at a 20–40% qualify rate, which depends on LinkedIn captures and the target company list as much as on job boards.
+
 ---
 
 ## 4. Users
@@ -235,12 +237,12 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | IN-1e | **Follow the real job link:** if the post text contains a link to the job on a company site or ATS (Greenhouse, Lever, Ashby, Workable and so on), the system fetches that page for the full job description and apply URL. LinkedIn pages themselves are never fetched. | P0 |
 | IN-1f | **Missing text fallback:** if only a URL is submitted with no text and no external job link, the deal is created with the poster's details and flagged **"Needs post text"**. The daily digest lists these so Peace can paste the text in HubSpot (one field) and the pipeline picks them up on the next run. | P0 |
 | IN-2 | **Worker:** validates the secret, normalises the URL (removes tracking parameters), checks HubSpot for an existing post ID or `job_url`, creates the deal (`New`, source = LinkedIn Post) and the poster contact, and returns a success or duplicate message to the browser. | P0 |
-| IN-3 | **Job-board import:** daily fetch from public feeds for companies in `config.yaml` (Greenhouse, Lever and Ashby job boards), plus RemoteOK, Himalayas and We Work Remotely, filtered by title keywords. | P0 |
+| IN-3 | **Job-board import:** daily fetch from public feeds for companies in `config.yaml` (Greenhouse, Lever and Ashby job boards), plus RemoteOK, Himalayas (a short list of title searches), We Work Remotely RSS, Remotive and Jobicy (see `docs/job-boards.md` for the board review and each board's terms). Any other board with an RSS or Atom feed can be added in `config.yaml` under `extra_feeds` without code changes (Job Source "Other"). Boards without a feed are not scraped; their jobs come in through the paste-a-link form. Pre-filters before anything reaches HubSpot: title match (target, adjacent, and an `explore_titles` list for trying new directions, imported last and labelled on the deal), recent (≤ 14 days), and a location pre-filter that skips roles clearly limited to countries Peace can't work from. Scheduled runs are off until the `ENABLE_SCHEDULED_IMPORT` repository variable is `true`. | P0 |
 | IN-4 | **Duplicate removal** on the normalised `job_url` (LinkedIn posts use the canonical `feed/update/urn:li:...` URL, so every link style for the same post matches). Cross-source duplicates (same company and title within 14 days) are skipped with a logged reason rather than created and archived, which saves records. | P0 |
 | IN-5 | **Company upsert:** find or create the company by domain or name and link it to the deal. | P0 |
 | IN-6 | **Poster contact (LinkedIn captures and pasted links):** create or link a contact with `pipeline_role = Poster`, using the profile link from the URL (IN-1c), plus any name, title or company the AI finds in the post text. If the same person posts again, the existing contact is reused (matched on profile link). | P0 |
 | IN-7 | **LinkedIn job alerts:** Apps Script reads the Gmail label `job-alerts`, pulls out job links and posts them to the Worker. | P1 |
-| IN-8 | **Daily cap:** at most 40 new deals imported from job boards per day in Phase 1 (about 100 in Phase 2), to keep review manageable (configurable). | P0 |
+| IN-8 | **Daily cap:** at most 100 new deals imported from job boards per day (set for 15 applications a day; see the §3 decision), to keep review manageable (configurable). | P0 |
 
 ### 10.2 Qualify
 
@@ -264,7 +266,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 
 | ID | Requirement | Priority |
 |---|---|---|
-| DR-1 | Process `Researched` deals, highest fit score first, up to `daily_draft_cap` (default 8 in Phase 1, about 20 in Phase 2). | P0 |
+| DR-1 | Process `Researched` deals, highest fit score first, up to `daily_draft_cap` (20, set for 15 applications a day; see the §3 decision). | P0 |
 | DR-2 | **Tailored CV:** the AI selects and rewords content **only from the master CV**, following the ATS rules in §12. It returns structured JSON, and the code renders the .docx from the template. | P0 |
 | DR-3 | **Cover letter:** 200–300 words using the company brief and the job's top requirements, truthful, no clichés. Rendered as .docx. | P0 |
 | DR-4 | **Connection note:** ≤ 300 characters, specific to the post or role. | P0 |
@@ -343,8 +345,8 @@ Outputs are checked against the schema. If the output is invalid, retry once, th
 | Remote worldwide | 30 |
 | Remote within a region Peace is eligible for | 20 |
 | Remote scope unclear | 10 |
-| Title matches a target role (GTM Engineer, Growth Engineer, Marketing Engineer, Marketing Automation, Growth or Revenue Operations) | 25 |
-| Adjacent title (Growth Marketing, Marketing Ops, Founder's Associate) | 15 |
+| Title matches a target role (GTM Engineer, Growth Engineer, Marketing Engineer, Marketing Automation, Growth or Revenue Operations, and AI operations and automation roles such as AI Operations, AI Automation, AI Implementation, AI Solutions; full list in `config.yaml`) | 25 |
+| Adjacent title (Growth Marketing, Marketing Ops, GTM Strategist, Founder's Associate, Chief of Staff; full list in `config.yaml`) | 15 |
 | Tools and skills overlap with the master CV | up to 20 |
 | Seniority Entry or Mid (Senior allowed if requirements match) | 15 |
 | Salary listed | 10 |
@@ -371,7 +373,7 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 - **Template:** built by `scripts/build_templates.py` into `templates/`, rendered by `src/render_docx.py`. One column, plain-text safe, with section headings in capitals (`PROFESSIONAL SUMMARY`, `CORE SKILLS`, `TOOLS & TECHNOLOGIES`, `PROFESSIONAL EXPERIENCE`, `PROJECTS`, `EDUCATION`, `CERTIFICATIONS`, `LANGUAGES`).
 - **No** tables, columns, text boxes, images, icons, or headers and footers.
 - Bullets are plain hyphens. Dates use the format `Mon YYYY - Mon YYYY`.
-- Contact line: `Remote | <email> | <LinkedIn URL>`. Location is shown as `Remote` with no country. The real values come from the `MASTER_CV` secret and are inserted by code, never by the AI. Portfolio link added later.
+- Contact line: `Remote | <email> | <LinkedIn URL>`. Location is shown as `Remote` with no country. **Decision (17 Nov 2026):** the no-country rule applies to the contact line only. Employer and education entries keep their locations as written in the master CV. The real values come from the `MASTER_CV` secret and are inserted by code, never by the AI. Portfolio link added later.
 - **Two pages maximum.** Roles in reverse date order. Relevant roles get 3–5 bullets, others 1–2.
 - **Optional roles** (tagged `OPTIONAL` in the master CV) appear **only** when the job specifically values agency, brand or content experience. Default: hidden.
 - The AI controls bullet selection and wording. The code controls structure and order.
@@ -455,8 +457,8 @@ target_titles: ["GTM Engineer", "Growth Engineer", "Marketing Engineer",
                 "Marketing Automation", "Growth Operations", "Revenue Operations"]
 adjacent_titles: ["Growth Marketing", "Marketing Operations", "Founder's Associate"]
 fit_threshold: 70
-daily_import_cap: 40      # Phase 2: about 100
-daily_draft_cap: 8        # Phase 2: about 20
+daily_import_cap: 100     # set for 15 a day (§3 decision)
+daily_draft_cap: 20       # set for 15 a day (§3 decision)
 followup_after_days: 5
 llm:
   provider: gemini        # or claude
@@ -495,7 +497,7 @@ timezone: "Africa/Lagos"
 | M6 | **Operations:** schedules, digest, alerts, dry-run | 3 consecutive scheduled runs with no unhandled errors. Digest received |
 | M7 | **Go live:** free Gemini key, real jobs | 5 applications a day for 5 days running |
 | M8 | **Portfolio:** README case study, diagram, Loom, LinkedIn posts | Published and linked in LinkedIn Featured |
-| M9 | **Scale to 15 a day** | Scale-up criteria in §3 met. 15 applications a day for 5 working days running, with quality holding steady |
+| M9 | **Hold 15 a day** | Caps are already set for 15 a day (§3 decision). Done when 15 applications a day run for 5 working days with quality holding steady (truth-check pass rate ≥ 90%, stable edit time) |
 
 **Decision (14 Nov 2026): M2 runs in parallel with M3 and does not block the build.** Peace completes the 5 timed manual applications while intake is being built. To keep the baseline honest, the timed applications are done before she starts using the capture button or paste form. If that becomes impractical, the PRD will record that the baseline is partial or estimated.
 

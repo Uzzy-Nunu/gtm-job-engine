@@ -171,7 +171,8 @@ def company_domain(url: str) -> str | None:
     ats = ("greenhouse.io", "lever.co", "ashbyhq.com", "workable.com",
            "smartrecruiters.com", "bamboohr.com", "recruitee.com",
            "breezy.hr", "teamtailor.com", "personio.de", "personio.com",
-           "remoteok.com", "himalayas.app", "weworkremotely.com", "wellfound.com")
+           "remoteok.com", "himalayas.app", "weworkremotely.com", "wellfound.com",
+           "remotive.com", "jobicy.com")
     if any(host == a or host.endswith("." + a) for a in ats):
         return None
     for prefix in ("jobs.", "careers.", "apply.", "boards."):

@@ -1,0 +1,48 @@
+name: Import jobs
+
+# Pulls new jobs from the job boards into HubSpot (PRD §14 "pipeline" slot).
+# Later milestones add qualify, research and draft steps after this one.
+on:
+  schedule:
+    - cron: "0 5 * * *"    # 06:00 Lagos
+    - cron: "0 13 * * *"   # 14:00 Lagos
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: read the boards but don't write to HubSpot"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hubspot-writes
+  cancel-in-progress: false
+
+jobs:
+  import:
+    # Scheduled runs only happen once the repository variable
+    # ENABLE_SCHEDULED_IMPORT is set to "true" (Settings > Secrets and
+    # variables > Actions > Variables). Manual runs always work.
+    if: github.event_name != 'schedule' || vars.ENABLE_SCHEDULED_IMPORT == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Import jobs
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          # Scheduled runs have no inputs, so they always run live.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python scripts/import_jobs.py --dry-run
+          else
+            python scripts/import_jobs.py
+          fi

@@ -1,0 +1,21 @@
+{
+  "_comment": "MADE-UP sample in Greenhouse job board API format.",
+  "jobs": [
+    {"id": 101, "title": "Senior GTM Engineer", "company_name": "SampleCorp",
+     "absolute_url": "https://boards.greenhouse.io/samplecorp/jobs/101?gh_src=abc",
+     "location": {"name": "Remote - Worldwide"}, "first_published": "2026-11-14T09:00:00Z",
+     "updated_at": "2026-11-14T09:00:00Z",
+     "content": "&lt;p&gt;Build our &lt;strong&gt;outbound&lt;/strong&gt; engine.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Clay&lt;/li&gt;&lt;li&gt;HubSpot&lt;/li&gt;&lt;/ul&gt;"},
+    {"id": 102, "title": "Revenue Operations Manager", "company_name": "SampleCorp",
+     "absolute_url": "https://boards.greenhouse.io/samplecorp/jobs/102",
+     "location": {"name": "Remote - US"}, "first_published": "2026-11-13T09:00:00Z",
+     "content": "&lt;p&gt;US only.&lt;/p&gt;"},
+    {"id": 103, "title": "Account Executive", "company_name": "SampleCorp",
+     "absolute_url": "https://boards.greenhouse.io/samplecorp/jobs/103",
+     "location": {"name": "Remote"}, "first_published": "2026-11-13T09:00:00Z", "content": ""},
+    {"id": 104, "title": "Growth Engineer", "company_name": "SampleCorp",
+     "absolute_url": "https://boards.greenhouse.io/samplecorp/jobs/104",
+     "location": {"name": "London Office"}, "first_published": "2026-11-12T09:00:00Z", "content": ""}
+  ],
+  "meta": {"total": 4}
+}

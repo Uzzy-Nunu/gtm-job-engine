@@ -13,6 +13,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: hubspot-writes
+  cancel-in-progress: false
+
 jobs:
   setup:
     runs-on: ubuntu-latest

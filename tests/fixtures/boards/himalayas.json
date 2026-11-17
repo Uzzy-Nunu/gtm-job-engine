@@ -1,0 +1,15 @@
+{
+  "_comment": "MADE-UP sample in Himalayas jobs API format.",
+  "offset": 0, "limit": 20, "totalCount": 2,
+  "jobs": [
+    {"title": "Marketing Operations Manager", "companyName": "Demo Systems", "excerpt": "Ops role.",
+     "description": "<p>Own the martech stack.</p>", "pubDate": 1794760000,
+     "locationRestrictions": [], "applicationLink": "https://demo-systems.example/careers/1",
+     "guid": "https://himalayas.app/companies/demo-systems/jobs/marketing-operations-manager",
+     "minSalary": 50000, "maxSalary": 65000, "currency": "USD", "salaryPeriod": "year"},
+    {"title": "GTM Engineer", "companyName": "US Only Co", "excerpt": "", "description": "<p>US.</p>",
+     "pubDate": 1794760000, "locationRestrictions": ["United States"],
+     "applicationLink": "https://usonly.example/jobs/1",
+     "guid": "https://himalayas.app/companies/us-only-co/jobs/gtm-engineer"}
+  ]
+}

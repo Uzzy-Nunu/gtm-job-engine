@@ -1,0 +1,38 @@
+{
+  "0-legal-notice": "MADE-UP sample in Remotive API format.",
+  "job-count": 3,
+  "jobs": [
+    {
+      "id": 501,
+      "url": "https://remotive.com/remote-jobs/sales-business/revenue-operations-lead-501",
+      "title": "Revenue Operations Lead",
+      "company_name": "Sample Remote Co",
+      "category": "Sales",
+      "job_type": "full_time",
+      "publication_date": "2026-11-15T08:00:00",
+      "candidate_required_location": "Worldwide",
+      "salary": "$70k - $90k",
+      "description": "<p>Own the CRM and pipeline reporting.</p>"
+    },
+    {
+      "id": 502,
+      "url": "https://remotive.com/remote-jobs/sales-business/sales-manager-502",
+      "title": "Sales Manager",
+      "company_name": "Sample Remote Co",
+      "category": "Sales",
+      "publication_date": "2026-11-15T08:00:00",
+      "candidate_required_location": "USA",
+      "description": "<p>Quota-carrying role.</p>"
+    },
+    {
+      "id": 503,
+      "url": "https://remotive.com/remote-jobs/marketing/lifecycle-marketing-manager-503",
+      "title": "Lifecycle Marketing Manager",
+      "company_name": "Sample Remote Co",
+      "category": "Marketing",
+      "publication_date": "2026-11-15T09:00:00",
+      "candidate_required_location": "Worldwide",
+      "description": "<p>Own onboarding and retention email.</p>"
+    }
+  ]
+}

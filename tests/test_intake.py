@@ -152,6 +152,12 @@ def test_company_site_link_without_text_is_not_flagged():
     assert not result.flags
 
 
+def test_title_without_company_gets_placeholder_name():
+    hs, intake = setup()
+    intake.submit(Submission(url="https://board.example/job/seo-lead", text="x", title="SEO Lead"))
+    assert hs.all("deals")[0]["properties"]["dealname"] == "SEO Lead - company TBC"
+
+
 def test_notes_are_kept_with_the_post_text():
     hs, intake = setup()
     intake.submit(Submission(url=POST, text=POST_TEXT, notes="Saw this via a friend"))

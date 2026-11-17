@@ -5,31 +5,86 @@
 # ------------------------------------------------------------------
 
 # --- Roles we want -------------------------------------------------
+# Built from the target titles in Peace's master CV (17 Nov 2026).
+# Matching is by phrase: "AI Automation" also matches
+# "AI Automation Specialist" and "Senior AI Automation Engineer".
 target_titles:
+  # GTM and growth engineering
   - GTM Engineer
   - Go-to-Market Engineer
+  - GTM Engineering
   - Growth Engineer
   - Marketing Engineer
   - Marketing Automation
   - Growth Operations
+  - GTM Operations
   - Revenue Operations
+  - RevOps
+  # AI operations and automation
+  - AI Operations
+  - AI Automation
+  - AI Implementation
+  - AI Enablement
+  - AI Solutions            # e.g. AI Solutions Specialist / Consultant
+  - AI Workflow
+  - Workflow Automation
+  - Automation Specialist
 
 adjacent_titles:
   - Growth Marketing
+  - Growth Manager          # also matches "Product Growth Manager"
+  - Growth Lead
+  - Growth Strategist
+  - GTM Strategist
+  - Go-to-Market Strategist
   - Marketing Operations
+  - Marketing Ops
+  - Growth Ops
+  - Marketing Technology
+  - MarTech
+  - Lead Generation
+  - Demand Generation
+  - Demand Gen
   - Founder's Associate
+  - Founders Associate
+  - Chief of Staff          # early-stage only; the Qualify step checks
+  - Founding Operator
+  - Founding GTM
 
-# Titles that mean "clearly not a match" (hard filter, PRD §10.2 QU-2)
+# Titles to explore: new directions that fit Peace's background, tried out
+# without mixing them into the core lists above. They are imported after
+# target and adjacent roles (so they never crowd them out of the daily cap),
+# every deal says which list it matched, and each import summary counts
+# matches per list. Promote a title that works to adjacent_titles; delete
+# one that doesn't. Each one also becomes a Himalayas search, so keep the
+# list short (about 10).
+explore_titles:
+  - Applied AI              # junior to mid only; many are ML engineering roles
+  - AI Architect            # only when the role isn't senior engineering
+  - CRM Manager
+  - HubSpot                 # HubSpot Specialist / Administrator / Consultant
+  - Implementation Specialist
+  - Partnerships Manager
+  - Business Operations
+  - Customer Success        # CS Manager / Specialist / Operations (CX background)
+  - CX Operations
+  - Customer Experience Operations
+
+# Titles that mean "clearly not a match" (hard filter, PRD §10.2 QU-2).
+# These win over every list above.
 excluded_title_words:
   - Account Executive
   - SDR
   - BDR
   - Sales Development
-  - Customer Success Manager
   - Software Engineer
   - Backend
   - Frontend
   - Data Scientist
+  - Machine Learning Engineer
+  - ML Engineer
+  - QA                      # QA / test automation is a different field
+  - Test Automation
   - Intern
 
 # --- Where Peace can work from (hard filter + rubric) ----------------
@@ -65,8 +120,8 @@ rubric:
   salary_listed: 10
 
 # --- Volume caps (Phase 1 -> Phase 2 values in comments) -------------
-daily_import_cap: 40       # Phase 2: about 100
-daily_draft_cap: 8         # Phase 2: about 20
+daily_import_cap: 100      # set for 15 applications a day (decision 17 Nov 2026)
+daily_draft_cap: 20        # about 15 sent a day after review; lower it if drafts need too much editing
 followup_after_days: 5
 duplicate_window_days: 14  # same company + title within this many days = duplicate
 
@@ -93,10 +148,60 @@ companies:
   lever: []
   ashby: []
 
+# Each entry is a board token, or {token, name, website} when the board
+# doesn't give the company name or website.
+#   greenhouse:
+#     - samplecorp
+#     - {token: demo-co, name: Demo Co, website: https://demo.example}
+
 public_feeds:
   remoteok: true
   himalayas: true
   we_work_remotely: true
+  remotive: true            # 1 request per run (terms: max ~4 a day)
+  jobicy: true              # terms: at most one pass per hour
+
+import:
+  max_job_age_days: 14      # ignore postings older than this
+  himalayas_pages: 1        # per search, 20 jobs per page (results are sorted by relevance)
+  himalayas_queries:        # one search each, plus every explore title; keep short (rate limit)
+    - GTM Engineer
+    - Growth Engineer
+    - Marketing Automation
+    - Revenue Operations
+    - Growth Operations
+    - Marketing Operations
+    - Growth Marketing
+    - Demand Generation
+    - AI Operations
+    - AI Automation
+    - AI Implementation
+    - GTM Strategist
+    - Chief of Staff
+  jobicy_geos: [anywhere, emea]   # Jobicy region codes Peace can work in
+  jobicy_pages: 3                 # 100 jobs per page
+  wwr_feeds:                # We Work Remotely RSS categories
+    - https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss
+    - https://weworkremotely.com/categories/remote-management-and-finance-jobs.rss
+    - https://weworkremotely.com/categories/all-other-remote-jobs.rss
+
+# --- Extra job boards (any board with an RSS or Atom feed) ----------
+# To add a board: copy the example, fill in name and url, save.
+# Jobs from these boards pass the same title, location and date filters
+# and show "Other" as Job Source (the board name is in the description).
+# Set enabled: false to pause a board without deleting it.
+#
+#   - name: Example Remote Jobs
+#     url: https://jobs.example/remote.rss
+#     title_format: auto     # optional: auto | "company: role" | "role at company" | role
+#     company: Example Inc   # optional: only for one company's own feed
+#     link_from: guid        # optional: use the item's permanent ID as the job link
+#     enabled: true          # optional
+extra_feeds:
+  - name: Inclusively Remote
+    url: https://inclusivelyremote.com/jobs/feed/
+    title_format: role       # titles are just the role; company is in the description
+    link_from: guid          # the feed mixes ?p=123 and /job/name/ links; the guid is stable
 
 # --- CV output (PRD §12) ---------------------------------------------
 cv:

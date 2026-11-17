@@ -1,0 +1,14 @@
+[
+  {"last_updated": 1794800000, "legal": "MADE-UP sample in RemoteOK API format."},
+  {"slug": "remote-growth-operations-manager-placeholder-inc-9001", "id": "9001", "epoch": 1794750000,
+   "date": "2026-11-15T00:00:00+00:00", "company": "Placeholder Inc", "position": "Growth Operations Manager",
+   "tags": ["growth", "ops"], "description": "<p>Scale our growth stack.</p>", "location": "Worldwide",
+   "apply_url": "https://placeholder.example/apply/9001", "salary_min": 70000, "salary_max": 90000,
+   "url": "https://remoteok.com/remote-jobs/remote-growth-operations-manager-placeholder-inc-9001"},
+  {"slug": "senior-gtm-engineer-samplecorp-9002", "id": "9002", "epoch": 1794740000,
+   "company": "SampleCorp", "position": "Senior GTM Engineer", "description": "<p>Same job as on Greenhouse.</p>",
+   "location": "Worldwide", "url": "https://remoteok.com/remote-jobs/senior-gtm-engineer-samplecorp-9002"},
+  {"slug": "old-revops-9003", "id": "9003", "epoch": 1780000000, "company": "Old Co",
+   "position": "RevOps Analyst", "description": "Old posting.", "location": "Worldwide",
+   "url": "https://remoteok.com/remote-jobs/old-revops-9003"}
+]

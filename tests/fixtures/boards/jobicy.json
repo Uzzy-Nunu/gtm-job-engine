@@ -1,0 +1,14 @@
+{
+  "apiVersion": "2", "friendlyNotice": "MADE-UP sample in Jobicy API format.",
+  "jobCount": 2, "hasMore": false, "nextCursor": null,
+  "jobs": [
+    {"id": 701, "url": "https://jobicy.com/jobs/701-demand-generation-manager", "jobSlug": "701-demand-generation-manager",
+     "jobTitle": "Demand Generation Manager", "companyName": "Fictional Growth", "jobIndustry": ["Marketing"],
+     "jobType": ["full-time"], "jobGeo": "EMEA", "jobLevel": "Midweight", "jobExcerpt": "Pipeline programmes.",
+     "jobDescription": "<p>Run paid, lifecycle and ABM programmes.</p>", "pubDate": "2026-11-16T07:00:00+00:00",
+     "salaryMin": 50000, "salaryMax": 60000, "salaryCurrency": "EUR", "salaryPeriod": "year"},
+    {"id": 702, "url": "https://jobicy.com/jobs/702-growth-lead", "jobTitle": "Growth Lead",
+     "companyName": "US Startup", "jobGeo": "USA", "jobDescription": "<p>US only.</p>",
+     "pubDate": "2026-11-16T07:00:00+00:00"}
+  ]
+}

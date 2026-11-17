@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>MADE-UP sample in We Work Remotely RSS format</title>
+<item>
+  <title>Fictional Labs: Founder's Associate (Growth)</title>
+  <region>Anywhere in the World</region>
+  <description>&lt;p&gt;Work directly with the founders.&lt;/p&gt;</description>
+  <pubDate>Sun, 15 Nov 2026 12:00:00 +0000</pubDate>
+  <guid>https://weworkremotely.com/remote-jobs/fictional-labs-founders-associate-growth</guid>
+  <link>https://weworkremotely.com/remote-jobs/fictional-labs-founders-associate-growth</link>
+</item>
+<item>
+  <title>Big Brand: Business Development Manager</title>
+  <region>USA Only</region>
+  <description>&lt;p&gt;Sales role.&lt;/p&gt;</description>
+  <pubDate>Sun, 15 Nov 2026 12:00:00 +0000</pubDate>
+  <link>https://weworkremotely.com/remote-jobs/big-brand-business-development-manager</link>
+</item>
+</channel>
+</rss>

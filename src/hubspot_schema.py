@@ -42,7 +42,8 @@ STAGES = [
 DEAL_PROPERTY_GROUP = {"name": "gtm_job_engine", "label": "GTM Job Engine"}
 
 JOB_SOURCES = ["LinkedIn Post", "LinkedIn Alert", "Greenhouse", "Lever",
-               "Ashby", "RemoteOK", "Himalayas", "WWR", "Company Site", "Other"]
+               "Ashby", "RemoteOK", "Himalayas", "WWR", "Remotive", "Jobicy",
+               "Company Site", "Other"]
 REMOTE_SCOPES = ["Worldwide", "Region", "Country-restricted", "Unclear",
                  "Not remote"]
 

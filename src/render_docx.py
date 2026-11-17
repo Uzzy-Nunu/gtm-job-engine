@@ -99,6 +99,8 @@ def render_cv(cv: dict, out_path: Path, template: Path = CV_TEMPLATE,
     doc = Document(str(template))
 
     doc.add_paragraph(plain(cv["name"]), style="CV Name")
+    if cv.get("headline"):
+        doc.add_paragraph(plain(cv["headline"]), style="CV Role")
     doc.add_paragraph(contact_line(cv.get("contact", {}), location_label),
                       style="CV Contact")
 
@@ -124,8 +126,10 @@ def render_cv(cv: dict, out_path: Path, template: Path = CV_TEMPLATE,
                 doc.add_paragraph(
                     f"{plain(role['title'])} - {plain(role['company'])}",
                     style="CV Role")
-                doc.add_paragraph(date_range(role.get("start"), role.get("end")),
-                                  style="CV Role Meta")
+                # Dates exactly as the master CV has them (never invent a month),
+                # or built from start/end.
+                dates = plain(role["dates"]) if role.get("dates") else date_range(role.get("start"), role.get("end"))
+                doc.add_paragraph(dates, style="CV Role Meta")
                 for b in role.get("bullets", []):
                     _bullet(doc, b)
 
@@ -134,6 +138,11 @@ def render_cv(cv: dict, out_path: Path, template: Path = CV_TEMPLATE,
                 doc.add_paragraph(plain(project["name"]), style="CV Role")
                 for b in project.get("bullets", []):
                     _bullet(doc, b)
+
+        elif key == "education" and all(isinstance(e, str) for e in content):
+            # Lines as written in the master CV: first in bold, the rest plain.
+            for i, line in enumerate(content):
+                doc.add_paragraph(plain(line), style="CV Role" if i == 0 else "CV Role Meta")
 
         elif key == "education":
             for edu in content:
@@ -144,6 +153,33 @@ def render_cv(cv: dict, out_path: Path, template: Path = CV_TEMPLATE,
                     doc.add_paragraph(date_range(edu.get("start"), edu.get("end")),
                                       style="CV Role Meta")
 
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(str(out_path))
+    return out_path
+
+
+COVER_TEMPLATE = ROOT / "templates" / "cover_letter_template.docx"
+
+
+def render_cover_letter(letter: dict, out_path: Path, template: Path = COVER_TEMPLATE,
+                        location_label: str = "Remote") -> Path:
+    """Plain, single-column cover letter.
+
+    Expected keys: name, contact{...}, date (text), greeting, paragraphs[], closing.
+    Name and contact details are inserted by code, never by the AI.
+    """
+    doc = Document(str(template))
+    doc.add_paragraph(plain(letter["name"]), style="CL Name")
+    doc.add_paragraph(contact_line(letter.get("contact", {}), location_label), style="CL Contact")
+    if letter.get("date"):
+        doc.add_paragraph(plain(letter["date"]))
+    doc.add_paragraph(plain(letter.get("greeting") or "Dear Hiring Team,"))
+    for para in letter.get("paragraphs", []):
+        if para.strip():
+            doc.add_paragraph(plain(para))
+    doc.add_paragraph(plain(letter.get("closing") or "Kind regards,"))
+    doc.add_paragraph(plain(letter["name"]))
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(out_path))

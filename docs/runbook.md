@@ -65,6 +65,13 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Poster details on the laptop:** open the post via **...** > **Copy link to post**, paste that link into the address bar, then use the button. Feed and search addresses (`feed/update/...`) don't include the poster.
 - **Cloudflare API token:** if it was created with an expiry, renew it before then (Cloudflare > My Profile > API Tokens > Roll) and update the `CLOUDFLARE_API_TOKEN` GitHub Secret. The live Worker keeps running either way; only redeploys need the token.
 
+## AI connection (Milestone 4)
+- **Check it:** Actions > **Check AI connection** > Run workflow. It sends one made-up request and checks the master CV secret. The log shows only section names and sizes, never CV content.
+- **Secrets:** `LLM_API_KEY` (Gemini key from aistudio.google.com/apikey) and `MASTER_CV` (the full master CV text).
+- **Updating the master CV:** edit your local file, then in GitHub go to Settings > Secrets and variables > Actions, click the pencil on `MASTER_CV`, paste the whole new text and click **Update secret**.
+- **Switching provider or model:** `config.yaml` > `llm` (`provider`, `fast_model`, `draft_model`), then update `LLM_API_KEY` if the provider changes.
+- **Free-tier limits:** see your current limits at aistudio.google.com (signed in). If runs hit limits, lower `max_ai_calls_per_run` or raise `min_seconds_between_calls`.
+
 ## Adding job titles
 All title lists are in `config.yaml`. Edit them on github.com: open the file, click the pencil icon, change it, then **Commit changes**.
 

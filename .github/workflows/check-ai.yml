@@ -1,0 +1,27 @@
+name: Check AI connection
+
+# Manual: Actions > Check AI connection > Run workflow.
+# Makes one tiny AI request with made-up text and checks the master CV secret
+# can be read. Prints only section names and sizes, never CV content.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Check AI connection and master CV
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          MASTER_CV: ${{ secrets.MASTER_CV }}
+        run: python scripts/check_ai.py

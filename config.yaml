@@ -127,11 +127,14 @@ duplicate_window_days: 14  # same company + title within this many days = duplic
 
 # --- AI provider (PRD §11.1) -----------------------------------------
 llm:
-  provider: gemini         # gemini | claude
-  fast_model: null         # chosen in M4 after checking current free-tier models
-  draft_model: null        # chosen in M5
+  provider: gemini                  # gemini | claude (key in the LLM_API_KEY secret)
+  fast_model: gemini-3.5-flash-lite # reading and scoring jobs (stable, checked 17 Nov 2026)
+  draft_model: gemini-3.8-flash     # CVs, cover letters, messages (M5)
+  # For Claude: provider: claude, fast_model: claude-haiku-5-5, draft_model: claude-sonnet-5-5
   max_retries: 3
   retry_backoff_seconds: 20
+  min_seconds_between_calls: 4      # keeps well inside free-tier per-minute limits
+  max_ai_calls_per_run: 40          # leftover jobs wait for the next run
 
 # --- HubSpot (PRD §9) ------------------------------------------------
 hubspot:

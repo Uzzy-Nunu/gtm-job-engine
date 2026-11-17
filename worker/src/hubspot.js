@@ -13,10 +13,13 @@ export class HubSpotError extends Error {
 }
 
 export class HubSpot {
-  constructor(token, { fetchImpl = fetch, retries = 3, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  constructor(token, { fetchImpl, retries = 3, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
     if (!token) throw new Error("HUBSPOT_TOKEN is not set on the Worker.");
     this.token = token;
-    this.fetch = fetchImpl;
+    // Cloudflare rejects fetch() called as a method of another object
+    // ("Illegal invocation"), so always call it as a plain function.
+    const impl = fetchImpl ?? globalThis.fetch;
+    this.fetch = (url, init) => impl(url, init);
     this.retries = retries;
     this.sleep = sleep;
   }

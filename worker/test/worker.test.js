@@ -13,6 +13,17 @@ const POST = "https://www.linkedin.com/posts/jane-doe-123_hiring-gtm-activity-73
 const SAME_POST = "https://www.linkedin.com/feed/update/urn:li:activity:7390000000000000001/";
 const TEXT = "We're hiring a GTM Engineer, remote worldwide. Python, Clay, HubSpot.";
 
+// Cloudflare throws "Illegal invocation" when fetch() is called as a method
+// of another object. This wrapper behaves the same way, so tests catch it.
+function cloudflareStrict(fetchImpl) {
+  return function strictFetch(url, init) {
+    if (this !== undefined && this !== globalThis) {
+      throw new TypeError("Illegal invocation: function called with incorrect `this` reference");
+    }
+    return fetchImpl(url, init);
+  };
+}
+
 function setup() {
   const hs = createFakeHubSpot();
   const send = async (payload, { secret = SECRET, env = ENV } = {}) => {
@@ -21,7 +32,7 @@ function setup() {
       headers: { "Content-Type": "application/json", "X-Capture-Secret": secret },
       body: typeof payload === "string" ? payload : JSON.stringify(payload),
     });
-    const resp = await handle(req, env, { fetchImpl: hs.fetch, sleep: async () => {} });
+    const resp = await handle(req, env, { fetchImpl: cloudflareStrict(hs.fetch), sleep: async () => {} });
     return { status: resp.status, body: await resp.json() };
   };
   return { hs, send };
@@ -171,4 +182,16 @@ test("root redirects to the form; unknown paths are 404", async () => {
   assert.equal(root.headers.get("Location"), `${ORIGIN}/add`);
   assert.equal((await handle(new Request(`${ORIGIN}/nope`), ENV)).status, 404);
   assert.equal(await (await handle(new Request(`${ORIGIN}/health`), ENV)).text(), "ok");
+});
+
+test("server errors say what went wrong (no secrets)", async () => {
+  const req = new Request(`${ORIGIN}/capture`, {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Capture-Secret": SECRET },
+    body: JSON.stringify({ url: POST, text: TEXT }),
+  });
+  const resp = await handle(req, { CAPTURE_SECRET: SECRET }, {});   // no HUBSPOT_TOKEN on the Worker
+  const body = await resp.json();
+  assert.equal(resp.status, 500);
+  assert.match(body.message, /HUBSPOT_TOKEN is not set/);
+  assert.ok(!body.message.includes(SECRET));
 });

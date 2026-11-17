@@ -91,8 +91,11 @@ export async function handle(request, env, deps = {}) {
     if (request.method === "POST" && url.pathname === "/capture") return await capture(request, env, deps);
     return json({ status: "error", message: "Not found." }, 404);
   } catch (e) {
-    console.error("unexpected error:", e?.message ?? e);
-    return json({ status: "error", message: "Something went wrong on the server. Please try again." }, 500);
+    // Error messages here never contain secrets or post text, so showing the
+    // reason helps fix problems quickly.
+    const reason = `${e?.name ?? "Error"}: ${String(e?.message ?? e).slice(0, 200)}`;
+    console.error("unexpected error:", reason);
+    return json({ status: "error", message: `Something went wrong on the server (${reason}). Please try again.` }, 500);
   }
 }
 

@@ -7,7 +7,7 @@ import pytest
 
 from src.llm import (ClaudeProvider, FakeProvider, GeminiProvider, LLMError,
                      _parse_json, make_llm)
-from src.master_cv import MasterCVError, load_text, qualify_profile, sections
+from src.cv_sections import MasterCVError, load_text, qualify_profile, sections
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_CV = (ROOT / "tests" / "fixtures" / "sample_cv_profile.md").read_text(encoding="utf-8")

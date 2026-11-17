@@ -22,7 +22,7 @@ import yaml  # noqa: E402
 
 from src.hubspot_client import load_dotenv  # noqa: E402
 from src.llm import LLMError, make_llm  # noqa: E402
-from src.master_cv import (QUALIFY_SECTIONS, MasterCVError, load_text,  # noqa: E402
+from src.cv_sections import (QUALIFY_SECTIONS, MasterCVError, load_text,  # noqa: E402
                            qualify_profile, sections)
 
 SCHEMA = {

@@ -47,8 +47,9 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 
 ## Job-board import (Milestone 3)
 - GitHub: **Actions > Import jobs > Run workflow**. "Dry run" is ticked by default: it reads the boards but writes nothing.
-- Scheduled runs (06:00 and 14:00 Lagos) only happen when the repository variable `ENABLE_SCHEDULED_IMPORT` = `true` (**Settings > Secrets and variables > Actions > Variables**). Delete it or set it to `false` to pause.
+- Scheduled runs (06:17 and 14:17 Lagos) only happen when the repository variable `ENABLE_SCHEDULED_IMPORT` = `true` (**Settings > Secrets and variables > Actions > Variables**). Delete it or set it to `false` to pause.
 - Locally: `python scripts/import_jobs.py --dry-run --offline` (sample data), `--dry-run` (real boards, fake HubSpot).
+- **Checking the schedule:** Actions > **Import jobs**. Scheduled runs show the event **schedule**, your own runs show **workflow_dispatch**. GitHub's scheduler is best effort, so runs can start late (sometimes 30+ minutes) or occasionally be skipped; you can always run it by hand.
 - The run summary lists what was fetched, filtered, created and skipped. A red run means a board or HubSpot call failed; the summary names it.
 - Tuning: titles in `config.yaml` (`target_titles`, `adjacent_titles`, `excluded_title_words`), locations in `eligible_regions`, volume in `daily_import_cap`.
 
@@ -61,6 +62,8 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Poster details come from the link.** Links from "Copy link to post" (`linkedin.com/posts/<name>_...`) include the poster; address-bar links like `linkedin.com/feed/update/...` don't, so those deals have no poster contact.
 - **Redeploying:** Actions > **Deploy Worker** > Run workflow. Do this after changing the Worker code or the `CAPTURE_SECRET` / `HUBSPOT_TOKEN` secrets.
 - **Errors:** Cloudflare dashboard > Workers & Pages > `gtm-job-engine-capture` > **Logs**.
+- **Poster details on the laptop:** open the post via **...** > **Copy link to post**, paste that link into the address bar, then use the button. Feed and search addresses (`feed/update/...`) don't include the poster.
+- **Cloudflare API token:** if it was created with an expiry, renew it before then (Cloudflare > My Profile > API Tokens > Roll) and update the `CLOUDFLARE_API_TOKEN` GitHub Secret. The live Worker keeps running either way; only redeploys need the token.
 
 ## Adding job titles
 All title lists are in `config.yaml`. Edit them on github.com: open the file, click the pencil icon, change it, then **Commit changes**.

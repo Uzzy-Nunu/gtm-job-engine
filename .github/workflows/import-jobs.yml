@@ -4,8 +4,8 @@ name: Import jobs
 # Later milestones add qualify, research and draft steps after this one.
 on:
   schedule:
-    - cron: "0 5 * * *"    # 06:00 Lagos
-    - cron: "0 13 * * *"   # 14:00 Lagos
+    - cron: "17 5 * * *"   # 06:17 Lagos (off the hour: GitHub delays or drops :00 runs)
+    - cron: "17 13 * * *"  # 14:17 Lagos
   workflow_dispatch:
     inputs:
       dry_run:

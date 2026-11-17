@@ -404,7 +404,7 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 
 | Job | Schedule | Runs |
 |---|---|---|
-| `pipeline` | 05:00 and 13:00 UTC daily | intake (job boards) → qualify → research → draft |
+| `pipeline` | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research → draft |
 | `process-captures` | Every 2 hours, 06:00–20:00 UTC | qualify → research → draft for new captures |
 | `digest` | 06:30 UTC daily (07:30 Lagos) | Daily digest |
 | `weekly` | Monday 07:00 UTC | Weekly summary (P1) |

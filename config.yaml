@@ -112,11 +112,13 @@ rubric:
   title:
     target_match: 25
     adjacent_match: 15
-  skills_tools_overlap_max: 20   # scaled by overlap with the master CV
+    explore_match: 10
+  skills_tools_overlap_max: 20   # the AI's judgement of overlap with the master CV, 0-20
   seniority:
     points: 15
     preferred: [Entry, Mid]
     allowed_if_requirements_match: [Senior]
+    unclear_points: 7            # seniority not stated
   salary_listed: 10
 
 # --- Volume caps (Phase 1 -> Phase 2 values in comments) -------------

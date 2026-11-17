@@ -252,6 +252,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | QU-2 | **Hard filters:** archive if `remote_scope` is Not remote or Country-restricted to a country Peace can't work from, or if the title clearly doesn't match. Record the reason. | P0 |
 | QU-3 | **Fit score (0–100)** using the rubric in §11.3. Store the score and reasons. | P0 |
 | QU-4 | Score ≥ `fit_threshold` (default 70) → `Qualified`. Otherwise → `Archived`. | P0 |
+| QU-6 | **Preview mode:** the Qualify workflow can run in `preview`, reading real New deals and calling the AI but writing nothing, so scores can be checked before going live. | P0 |
 | QU-5 | If the job text is too short or missing (for example a LinkedIn post with no description), try to fetch the apply URL's page text. If it's still missing, flag `pipeline_error` and leave it for manual review. | P1 |
 
 ### 10.3 Research (no email finding in v1)
@@ -322,6 +323,8 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 - **Free-tier rate limits:** limits aren't guaranteed and can change. The code retries with backoff on rate-limit errors, spreads work across scheduled runs, and leaves anything unfinished for the next run instead of failing.
 
 ### 11.2 Extraction output (schema)
+**Decision (M4, 18 Nov 2026):** extraction and the fit assessment are one AI request per job (saves free-tier quota). Poster fields are not requested: poster details come only from the post URL (IN-1c), so third-party names never pass through the AI. The AI also returns `skills_overlap_points` (0-20), `senior_requirements_met`, `matched_skills`, `missing_requirements` and `fit_reasons`. All points and hard filters are applied by code (`src/scoring.py`). The live schema is in `src/qualify.py` and the prompt in `prompts/qualify.md`.
+
 ```json
 {
   "job_title": "string",
@@ -350,6 +353,8 @@ Outputs are checked against the schema. If the output is invalid, retry once, th
 | Remote scope unclear | 10 |
 | Title matches a target role (GTM Engineer, Growth Engineer, Marketing Engineer, Marketing Automation, Growth or Revenue Operations, and AI operations and automation roles such as AI Operations, AI Automation, AI Implementation, AI Solutions; full list in `config.yaml`) | 25 |
 | Adjacent title (Growth Marketing, Marketing Ops, GTM Strategist, Founder's Associate, Chief of Staff; full list in `config.yaml`) | 15 |
+| Explore title (`explore_titles`) | 10 |
+| Seniority not stated (instead of the 15 below) | 7 |
 | Tools and skills overlap with the master CV | up to 20 |
 | Seniority Entry or Mid (Senior allowed if requirements match) | 15 |
 | Salary listed | 10 |

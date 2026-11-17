@@ -45,11 +45,22 @@ def load_text() -> str:
 def sections(text: str) -> dict[str, str]:
     """'## HEADING' -> body text, in order. Headings are upper-cased."""
     found: dict[str, str] = {}
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
     parts = re.split(r"^##\s+(.+?)\s*$", text, flags=re.MULTILINE)
+    if len(parts) == 1:
+        # No "## " markers: the text was probably copied from a formatted
+        # preview. Fall back to headings written in capitals ("CORE SKILLS").
+        parts = re.split(r"^(" + _CAPS_HEADING + r")[ \t]*$", text, flags=re.MULTILINE)
+        parts = [p for i, p in enumerate(parts) if i % 2 == 0 or p is not None]
     for i in range(1, len(parts), 2):
         heading = parts[i].strip().upper()
         found[heading] = parts[i + 1].strip().strip("-").strip()
     return found
+
+
+# A line whose text before any "(" or "[" is ALL CAPS, e.g.
+# "CORE SKILLS (grouped; ...)" or "CONTACT  [inserted by code]".
+_CAPS_HEADING = r"[A-Z][A-Z0-9&/' -]{2,}[A-Z](?:[ \t]*[(\[][^\n]*)?"  # one line only
 
 
 def pick(text: str, wanted: tuple[str, ...]) -> str:

@@ -1,0 +1,305 @@
+{
+  "_comment": "MADE-UP jobs and the AI answers a fake model returns for them. Used to check that hard filters and the rubric give the expected outcome (PRD M4 acceptance).",
+  "samples": [
+    {
+      "id": "s1",
+      "note": "Worldwide target role, mid level, salary listed",
+      "description": "We're hiring a GTM Engineer at SampleCorp. Fully remote, worldwide. $70k-$90k. Build outbound with Clay and HubSpot. We're hiring a GTM Engineer at SampleCorp. Fully remote, worldwide. $70k-$90k. Build outbound with Clay and HubSpot. We're hiring a GTM Engineer at SampleCorp. Fully remote, worldwide. $70k-$90k. Build outbound with Clay and HubSpot. ",
+      "ai": {
+        "job_title": "GTM Engineer",
+        "company_name": "SampleCorp",
+        "company_domain": "samplecorp.example",
+        "apply_url": null,
+        "remote_scope": "Worldwide",
+        "eligible_regions": null,
+        "seniority": "Mid",
+        "salary_text": "$70k-$90k",
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 16,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Qualified",
+        "score": 96,
+        "name": "GTM Engineer - SampleCorp"
+      }
+    },
+    {
+      "id": "s2",
+      "note": "US-only: hard filter",
+      "description": "Revenue Operations Manager at Demo Co. Remote, US only. Salesforce, HubSpot. Revenue Operations Manager at Demo Co. Remote, US only. Salesforce, HubSpot. Revenue Operations Manager at Demo Co. Remote, US only. Salesforce, HubSpot. Revenue Operations Manager at Demo Co. Remote, US only. Salesforce, HubSpot. ",
+      "ai": {
+        "job_title": "Revenue Operations Manager",
+        "company_name": "Demo Co",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Country-restricted",
+        "eligible_regions": "United States",
+        "seniority": "Mid",
+        "salary_text": null,
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 15,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Archived",
+        "score": 0,
+        "reason": "United States"
+      }
+    },
+    {
+      "id": "s3",
+      "note": "Hybrid: hard filter",
+      "description": "Growth Engineer at Placeholder Inc, hybrid in Berlin, 3 days in office. Growth Engineer at Placeholder Inc, hybrid in Berlin, 3 days in office. Growth Engineer at Placeholder Inc, hybrid in Berlin, 3 days in office. Growth Engineer at Placeholder Inc, hybrid in Berlin, 3 days in office. ",
+      "ai": {
+        "job_title": "Growth Engineer",
+        "company_name": "Placeholder Inc",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Not remote",
+        "eligible_regions": "Berlin",
+        "seniority": "Mid",
+        "salary_text": null,
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 18,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Archived",
+        "score": 0,
+        "reason": "Not remote"
+      }
+    },
+    {
+      "id": "s4",
+      "note": "EMEA senior, requirements met, no salary: below threshold",
+      "description": "Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. ",
+      "ai": {
+        "job_title": "Senior Marketing Operations Manager",
+        "company_name": "Fictional AI",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Region",
+        "eligible_regions": "EMEA",
+        "seniority": "Senior",
+        "salary_text": null,
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 12,
+        "senior_requirements_met": true,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Archived",
+        "score": 62,
+        "reason": "below the threshold"
+      }
+    },
+    {
+      "id": "s5",
+      "note": "Remote unclear, AI automation, seniority unclear, salary: exactly 70",
+      "description": "AI Automation Specialist at Demo Systems. Remote. Pay: EUR 50k. Make, n8n, LLM workflows. AI Automation Specialist at Demo Systems. Remote. Pay: EUR 50k. Make, n8n, LLM workflows. AI Automation Specialist at Demo Systems. Remote. Pay: EUR 50k. Make, n8n, LLM workflows. ",
+      "ai": {
+        "job_title": "AI Automation Specialist",
+        "company_name": "Demo Systems",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Unclear",
+        "eligible_regions": null,
+        "seniority": "Unclear",
+        "salary_text": "EUR 50k",
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 18,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Qualified",
+        "score": 70,
+        "name": "AI Automation Specialist - Demo Systems"
+      }
+    },
+    {
+      "id": "s6",
+      "note": "Lead role not on the title lists",
+      "description": "Head of Growth at Sample Labs. Remote worldwide. Lead a team of eight. Head of Growth at Sample Labs. Remote worldwide. Lead a team of eight. Head of Growth at Sample Labs. Remote worldwide. Lead a team of eight. Head of Growth at Sample Labs. Remote worldwide. Lead a team of eight. ",
+      "ai": {
+        "job_title": "Head of Growth",
+        "company_name": "Sample Labs",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Worldwide",
+        "eligible_regions": null,
+        "seniority": "Lead",
+        "salary_text": null,
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 10,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Archived",
+        "score": 40
+      }
+    },
+    {
+      "id": "s7",
+      "note": "Excluded title word",
+      "description": "Account Executive, Mid-Market at Example Corp. Remote worldwide. Quota carrying. Account Executive, Mid-Market at Example Corp. Remote worldwide. Quota carrying. Account Executive, Mid-Market at Example Corp. Remote worldwide. Quota carrying. Account Executive, Mid-Market at Example Corp. Remote worldwide. Quota carrying. ",
+      "ai": {
+        "job_title": "Account Executive, Mid-Market",
+        "company_name": "Example Corp",
+        "company_domain": null,
+        "apply_url": null,
+        "remote_scope": "Worldwide",
+        "eligible_regions": null,
+        "seniority": "Mid",
+        "salary_text": "$60k + OTE",
+        "required_skills": [
+          "CRM automation",
+          "Outbound"
+        ],
+        "tools_mentioned": [
+          "HubSpot",
+          "Clay"
+        ],
+        "key_requirements": [
+          "3+ years in GTM roles"
+        ],
+        "skills_overlap_points": 6,
+        "senior_requirements_met": false,
+        "matched_skills": [
+          "HubSpot",
+          "Outbound"
+        ],
+        "missing_requirements": [
+          "SQL"
+        ],
+        "fit_reasons": [
+          "Made-up reason for the test."
+        ]
+      },
+      "expect": {
+        "status": "Archived",
+        "score": 0,
+        "reason": "Account Executive"
+      }
+    }
+  ]
+}

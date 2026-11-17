@@ -174,3 +174,30 @@ def test_master_cv_comes_from_secret_or_local_file(monkeypatch, tmp_path):
     monkeypatch.setenv("MASTER_CV_PATH", "")
     with pytest.raises(MasterCVError, match="MASTER_CV"):
         load_text()
+
+
+def _as_formatted_preview(markdown: str) -> str:
+    """Roughly what copying from a Markdown preview gives: no #, ---, ** or `."""
+    import re as _re
+    lines = []
+    for line in markdown.splitlines():
+        if line.strip() == "---":
+            continue
+        lines.append(_re.sub(r"^#+\s*", "", line).replace("**", "").replace("`", ""))
+    return "\n".join(lines)
+
+
+def test_headings_are_found_even_without_markdown_symbols():
+    preview = _as_formatted_preview(SAMPLE_CV)
+    assert "## " not in preview
+    names = list(sections(preview))
+    for wanted in ("CONTACT", "TARGET TITLES", "CORE SKILLS", "TOOLS & TECHNOLOGIES", "PROFESSIONAL EXPERIENCE"):
+        assert any(n.startswith(wanted) for n in names), (wanted, names)
+    profile = qualify_profile(preview)
+    assert "HubSpot" in profile and "Make" in profile
+    for private in ("alex.sample@example.com", "555-0199", "Example Analytics"):
+        assert private not in profile
+
+
+def test_windows_line_endings_are_fine():
+    assert "CORE SKILLS" in qualify_profile(SAMPLE_CV.replace("\n", "\r\n"))

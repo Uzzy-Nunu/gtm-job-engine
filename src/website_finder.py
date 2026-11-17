@@ -110,6 +110,37 @@ def looks_parked(page_text: str) -> bool:
     return len(lowered.strip()) < 40 or any(p in lowered for p in PARKED)
 
 
+# Words too common in job posts and websites to say what a business does.
+STOPWORDS = set("""
+about above after again against also always among another apply applying based because been before
+being below between both build building can come company could currently does doing during each
+every experience first from full further have having help here hiring home into join just know
+learn like looking make more most much must need next only other our ours over part people
+please position really remote role roles same should some such team teams than that their them
+then there these they thing things this those through time today together under until using very
+want were what when where which while will with within work working world would year years your
+yours youre we're you'll we'll you've anywhere global worldwide great best new free more info contact
+privacy policy terms cookies cookie rights reserved login sign signup started careers jobs blog
+""".split())
+MIN_JOB_WORDS = 25    # below this, the job text is too short to judge topics
+MIN_SHARED = 3        # topic words a guessed site must share with the job text
+
+
+def topic_words(text: str, exclude: list[str] | None = None) -> set[str]:
+    words = set(re.findall(r"[a-z][a-z0-9]{3,}", _ascii(text or "").lower()))
+    return words - STOPWORDS - set(exclude or [])
+
+
+def same_topic(job_text: str, page_text: str, company: str) -> bool:
+    """True when a guessed site talks about the same things as the job post
+    (an AI-for-sales startup and a perfume brand share almost no words).
+    Short job texts can't be judged, so they pass and the AI check decides."""
+    job = topic_words(job_text, name_words(company))
+    if len(job) < MIN_JOB_WORDS:
+        return True
+    return len(job & topic_words(page_text, name_words(company))) >= MIN_SHARED
+
+
 class WebsiteFinder:
     def __init__(self, http, llm=None, robots_ok=None, max_checks: int = 10):
         self.http = http
@@ -117,6 +148,7 @@ class WebsiteFinder:
         self.robots_ok = robots_ok or (lambda url: True)
         self.max_checks = max_checks
         self.checked: list[str] = []
+        self.off_topic: list[str] = []
 
     def verify(self, domain: str, company: str) -> str | None:
         """Homepage text if the domain is the company's live site, else None."""
@@ -152,14 +184,20 @@ class WebsiteFinder:
                   ("apply link", lambda: [d for d in [clean_domain(_safe_domain(apply_url))] if d]),
                   ("AI suggestion", lambda: [d for d in [self.ask_ai(company, job_title)] if d]),
                   ("name guess", lambda: guesses(company))]
+        weak = {"AI suggestion", "name guess"}  # need the topic check too
+        self.off_topic: list[str] = []
         for how, candidates in stages:
             for domain in candidates():
                 if domain in self.checked or len(self.checked) >= self.max_checks:
                     continue
                 self.checked.append(domain)
                 text = self.verify(domain, company)
-                if text:
-                    return domain, text, how
+                if not text:
+                    continue
+                if how in weak and not same_topic(raw_text, text, company):
+                    self.off_topic.append(domain)   # same name, different business: keep looking
+                    continue
+                return domain, text, how
         return None, None, "no website could be verified"
 
 

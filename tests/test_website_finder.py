@@ -132,3 +132,50 @@ def test_research_rejects_a_same_named_different_company():
     assert report.outcomes[0].note == "rejected skylar.com (a different company); brief from job posting only"
     deal = hs.objects["deals"][deal_id]["properties"]
     assert hs.stage_label(deal["dealstage"]) == "Researched" and "job posting only" in deal["job_analysis"]
+
+
+# --- same name, different business (the Skylar case) -----------------------------
+
+JOB_POST = """Skylar is hiring a Go-to-Market (GTM) Engineer. We build AI copilots that help revenue
+teams research accounts, personalise outbound sequences and keep CRM pipelines clean. You will
+design enrichment workflows in Clay, automate lead routing in HubSpot, write prompts for our
+outbound agents, analyse conversion data and partner with sales leadership on pipeline
+generation experiments across inbound and outbound motions."""
+PERFUME = ("<h1>Skylar</h1><p>Clean, hypoallergenic fragrances and body care. Shop perfume rollerballs, "
+           "candles and gift sets. Vegan, cruelty free, safe for sensitive skin.</p>") * 5
+STARTUP = ("<h1>Skylar</h1><p>AI copilots for revenue teams. Research accounts, personalise outbound "
+           "sequences, enrich leads and keep your CRM pipeline clean. Works with HubSpot and Salesforce.</p>") * 5
+
+
+def test_same_named_business_in_another_field_is_skipped_and_the_search_continues():
+    http = StubHttp({"https://skylar.com": PERFUME, "https://skylar.ai": STARTUP})
+    finder = WebsiteFinder(http, FakeProvider(lambda s, p, sc: {"domain": None}))
+    domain, _, how = finder.find("Skylar", "GTM Engineer", raw_text=JOB_POST)
+    assert (domain, how) == ("skylar.ai", "name guess")
+    assert finder.off_topic == ["skylar.com"]
+
+
+def test_ai_suggestion_also_gets_the_topic_check():
+    http = StubHttp({"https://skylar.com": PERFUME, "https://skylar.ai": STARTUP})
+    finder = WebsiteFinder(http, FakeProvider(lambda s, p, sc: {"domain": "skylar.com"}))
+    domain, _, _ = finder.find("Skylar", "GTM Engineer", raw_text=JOB_POST)
+    assert domain == "skylar.ai"
+
+
+def test_clues_from_the_job_text_skip_the_topic_check():
+    # an email domain in the post is strong evidence on its own
+    http = StubHttp({"https://skylar.com": PERFUME})
+    domain, _, how = WebsiteFinder(http).find("Skylar", raw_text=JOB_POST + " Apply: jobs@skylar.com")
+    assert (domain, how) == ("skylar.com", "job text")
+
+
+def test_short_posts_cannot_be_judged_so_the_ai_check_decides():
+    http = StubHttp({"https://skylar.com": PERFUME})
+    domain, _, _ = WebsiteFinder(http).find("Skylar", raw_text="Skylar is hiring a GTM Engineer. DM me.")
+    assert domain == "skylar.com"
+
+
+def test_same_topic():
+    from src.website_finder import same_topic
+    assert same_topic(JOB_POST, STARTUP, "Skylar")
+    assert not same_topic(JOB_POST, PERFUME, "Skylar")

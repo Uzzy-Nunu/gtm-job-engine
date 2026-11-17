@@ -93,6 +93,7 @@ class QualifyReport:
     ai_calls: int = 0
     format_problems: list[str] = field(default_factory=list)
     schema_mode: str = ""
+    busy_retries: int = 0
 
     def count(self, status):
         return sum(1 for o in self.outcomes if o.status == status)
@@ -104,7 +105,8 @@ class QualifyReport:
     def lines(self) -> list[str]:
         out = [f"Qualified: {self.count('Qualified')} | Archived: {self.count('Archived')} | "
                f"skipped: {self.count('skipped')} | errors: {self.count('error')} | "
-               f"AI requests: {self.ai_calls} | left for next run: {self.waiting}"]
+               f"AI requests: {self.ai_calls} (busy retries: {self.busy_retries}) | "
+               f"left for next run: {self.waiting}"]
         if self.stopped:
             out.append(f"! Stopped early: {self.stopped}")
         if self.format_problems:
@@ -217,6 +219,7 @@ class Qualifier:
             report.outcomes.append(self._apply(deal, props, facts))
         report.ai_calls = self.llm.calls
         report.format_problems = list(getattr(self.llm, "format_problems", []))
+        report.busy_retries = getattr(self.llm, "busy_retries", 0)
         if hasattr(self.llm, "use_schema"):
             report.schema_mode = ("schema enforced by the API" if self.llm.use_schema
                                   else "plain JSON (API rejected the schema field)")

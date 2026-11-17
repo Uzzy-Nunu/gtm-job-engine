@@ -2,7 +2,7 @@
 
 **A human-in-the-loop system that finds remote Go-to-Market (GTM) roles, scores fit, researches the company and drafts tailored, ATS-friendly applications for review in HubSpot.**
 
-> Status: 🚧 In build. Milestones 0-3 complete (foundations, HubSpot, baseline, intake); AI qualification (M4) next. See [roadmap](#roadmap).
+> Status: 🚧 In build. Milestones 0-3 complete; AI qualification and research (M4) live in testing. See [roadmap](#roadmap).
 
 ---
 
@@ -36,6 +36,7 @@ Capture / paste link / job boards
 | **Data minimisation** | Contact details are never sent to the AI. Emails, phones and profile URLs are redacted from job text first. |
 | **HubSpot as the single source of truth** | Every job is a deal; every module moves it by changing its stage. The CRM doubles as the review queue. |
 | **ATS-safe output** | Single column, standard headings, hyphen bullets, no tables, images, headers or footers. Automated tests enforce it. |
+| **AI reads, code decides** | The AI extracts facts and judges skills overlap; hard filters and the fit-score rubric are plain code, so every score has a readable breakdown. Contact details are redacted before any AI call, only the skills and tools part of the CV is ever sent, and preview modes show results before anything is written. |
 | **Capture without automation** | A Cloudflare Worker serves a phone-friendly paste form and a one-click bookmarklet. Poster details come from the post URL itself, and the access key never sits in a link or bookmark. One post can carry two LinkedIn IDs, so repeats are also matched by poster and text. |
 | **Widen the funnel, not the noise** | Eight job sources (public APIs and RSS, never scraped pages) pass title, remote-eligibility and recency filters before anything reaches the CRM. New boards and exploratory titles are config edits, not code changes. |
 | **Lean CRM model** | HubSpot's free CRM allows 10 custom properties, so the model uses 9 and keeps everything else in built-in fields, notes and attachments. Setup is idempotent and checks the limit before writing. |
@@ -72,7 +73,7 @@ tests/fixtures/      made-up sample data only
 | M1 | HubSpot pipeline and properties setup | ✅ Done |
 | M2 | Manual baseline (timed by hand) | ✅ Done (1 application) |
 | M3 | Intake: job boards, capture bookmarklet, paste-a-link form | ✅ Done |
-| M4 | Qualify and research | ⏳ Next |
+| M4 | Qualify and research | 🔧 In progress (live) |
 | M5 | Draft: tailored CV, cover letter, messages, truth check | |
 | M6 | Operations: schedules, digest, alerts, dry run | |
 | M7 | Go live | |

@@ -41,22 +41,30 @@ class SourceError(RuntimeError):
 class _TextExtractor(HTMLParser):
     BLOCK = {"p", "div", "br", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6", "tr"}
 
+    SKIP = {"script", "style", "noscript", "svg", "template", "head"}
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
+        self._skipping = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag == "li":
+        if tag in self.SKIP:
+            self._skipping += 1
+        elif tag == "li":
             self.parts.append("\n- ")
         elif tag in self.BLOCK:
             self.parts.append("\n")
 
     def handle_endtag(self, tag):
-        if tag in self.BLOCK:
+        if tag in self.SKIP:
+            self._skipping = max(0, self._skipping - 1)
+        elif tag in self.BLOCK:
             self.parts.append("\n")
 
     def handle_data(self, data):
-        self.parts.append(data)
+        if not self._skipping:
+            self.parts.append(data)
 
 
 def html_to_text(markup: str | None) -> str:

@@ -27,7 +27,7 @@ jobs:
     # variables > Actions > Variables). Manual runs always work.
     if: github.event_name != 'schedule' || vars.ENABLE_SCHEDULED_IMPORT == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -46,3 +46,19 @@ jobs:
           else
             python scripts/import_jobs.py
           fi
+      # Scheduled runs then qualify and research what came in, once the
+      # repository variable ENABLE_SCHEDULED_AI is "true". Runs even if one
+      # job board failed during the import.
+      - name: Qualify jobs
+        if: always() && github.event_name == 'schedule' && vars.ENABLE_SCHEDULED_AI == 'true'
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          MASTER_CV: ${{ secrets.MASTER_CV }}
+        run: python scripts/qualify_jobs.py
+      - name: Research jobs
+        if: always() && github.event_name == 'schedule' && vars.ENABLE_SCHEDULED_AI == 'true'
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python scripts/research_jobs.py

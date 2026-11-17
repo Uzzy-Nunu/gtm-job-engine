@@ -1,9 +1,8 @@
-name: Qualify jobs
+name: Qualify and research jobs
 
-# Manual for now: Actions > Qualify jobs > Run workflow.
-# "preview" reads your New deals and asks the AI, but writes nothing.
-# "live" renames, scores and moves deals to Qualified or Archived.
-# (Milestone 4 part 3 adds it to the scheduled pipeline.)
+# Manual: Actions > Qualify and research jobs > Run workflow.
+# "preview" reads your deals and asks the AI, but writes nothing.
+# "live" qualifies New deals, then researches Qualified ones.
 on:
   workflow_dispatch:
     inputs:
@@ -21,9 +20,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  qualify:
+  process:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    env:
+      HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      MASTER_CV: ${{ secrets.MASTER_CV }}
+      MODE_FLAG: ${{ inputs.mode == 'live' && ' ' || '--preview' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -32,13 +36,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Qualify jobs (${{ inputs.mode }})
-        env:
-          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          MASTER_CV: ${{ secrets.MASTER_CV }}
-        run: |
-          if [ "${{ inputs.mode }}" = "live" ]; then
-            python scripts/qualify_jobs.py
-          else
-            python scripts/qualify_jobs.py --preview
-          fi
+        run: python scripts/qualify_jobs.py $MODE_FLAG
+      - name: Research jobs (${{ inputs.mode }})
+        if: always()
+        run: python scripts/research_jobs.py $MODE_FLAG

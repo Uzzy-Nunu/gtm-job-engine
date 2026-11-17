@@ -1,0 +1,39 @@
+name: Process captures
+
+# Every 2 hours, 07:47-21:47 Lagos: qualify New deals (your captures and any
+# imports), then research Qualified ones (PRD §14 "process-captures").
+# Scheduled runs only happen once the repository variable ENABLE_SCHEDULED_AI
+# is set to "true". Manual runs always work.
+on:
+  schedule:
+    - cron: "47 6-20/2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hubspot-writes
+  cancel-in-progress: false
+
+jobs:
+  process:
+    if: github.event_name != 'schedule' || vars.ENABLE_SCHEDULED_AI == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      MASTER_CV: ${{ secrets.MASTER_CV }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Qualify jobs
+        run: python scripts/qualify_jobs.py
+      - name: Research jobs
+        if: always()
+        run: python scripts/research_jobs.py

@@ -22,6 +22,14 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
+def _sortable(value):
+    """Numbers sort as numbers ("100" after "56"); dates and text sort as text."""
+    try:
+        return (0, float(value), "")
+    except (TypeError, ValueError):
+        return (1, 0.0, str(value or ""))
+
+
 def _as_datetime(value):
     if value is None:
         return None
@@ -61,6 +69,9 @@ class FakeHubSpot:
         if path == "/crm/v3/pipelines/deals":
             return {"results": [copy.deepcopy(self.pipeline)]}
         parts = path.strip("/").split("/")
+        if parts[:3] == ["crm", "v4", "objects"] and len(parts) == 7 and parts[5] == "associations":
+            # GET /crm/v4/objects/{from}/{id}/associations/{to}
+            return {"results": [{"toObjectId": int(i)} for i in self.associated(parts[3], parts[4], parts[6])]}
         if parts[:3] == ["crm", "v3", "objects"] and len(parts) == 5:
             record = self.objects[parts[3]].get(parts[4])
             if not record:
@@ -165,7 +176,7 @@ class FakeHubSpot:
                 if any(all(self._matches(rec, f, obj) for f in g.get("filters", [])) for g in groups)]
         for sort in reversed(body.get("sorts", [])):
             key = sort.get("propertyName")
-            hits.sort(key=lambda r: (r["properties"].get(key) is None, r["properties"].get(key) or ""),
+            hits.sort(key=lambda r: (r["properties"].get(key) is None, _sortable(r["properties"].get(key))),
                       reverse=sort.get("direction") == "DESCENDING")
         limit = int(body.get("limit", 10))
         props = body.get("properties")

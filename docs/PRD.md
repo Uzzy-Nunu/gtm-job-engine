@@ -206,7 +206,7 @@ The free CRM includes **one** deal pipeline. The setup script renames and reconf
 | LinkedIn post ID | Inside `job_url` |
 | Needs post text | `pipeline_error` = `NEEDS POST TEXT ...` |
 | Eligible regions, seniority, salary, skills, tools, fit reasons, missing keywords, suggested contact titles | `job_analysis` |
-| Company brief | Built-in company **Description**, plus a note on the deal |
+| Company brief | Built-in company **Description** (if empty) and the deal's **Job Analysis** |
 | CV and cover letter files | Attachments on a deal note (shown in the deal's Attachments panel) |
 | Connection note, follow-up message | A "Drafts" note on the deal |
 | Minutes spent | Not stored in HubSpot. Time is logged in the M2 baseline sheet |
@@ -262,6 +262,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | RE-1 | Fetch the company homepage or about page (public, respecting robots.txt) and produce a 3–5 bullet **company brief**: what they sell, to whom, stage or size if stated, and an angle for the cover letter. | P0 |
 | RE-2 | Suggest 2–3 likely hiring-manager titles (for example Head of Growth, RevOps Lead, VP Marketing) for Peace to look up by hand. | P0 |
 | RE-3 | Move to `Researched`. | P0 |
+| RE-4 | **Where research is stored (decision 18 Nov 2026):** the brief, cover-letter angle and suggested contact titles are appended to the deal's **Job Analysis** (replaced, not duplicated, if a deal is researched again). The brief bullets also go into the company's **Description** if it's empty. No separate note is created. The homepage (and `/about` if the homepage says little) is read only when robots.txt allows; LinkedIn is never fetched. Implementation: `src/research.py`, `prompts/research.md`. | P0 |
 
 ### 10.4 Draft
 
@@ -412,8 +413,8 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 
 | Job | Schedule | Runs |
 |---|---|---|
-| `pipeline` | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research → draft |
-| `process-captures` | Every 2 hours, 06:00–20:00 UTC | qualify → research → draft for new captures |
+| `pipeline` (`import-jobs.yml`) | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research (→ draft from M5). AI steps run only when the repository variable `ENABLE_SCHEDULED_AI` is `true` |
+| `process-captures` | Every 2 hours at :47, 06:47–20:47 UTC (07:47–21:47 Lagos) | qualify → research (→ draft from M5) |
 | `digest` | 06:30 UTC daily (07:30 Lagos) | Daily digest |
 | `weekly` | Monday 07:00 UTC | Weekly summary (P1) |
 

@@ -190,3 +190,13 @@ def test_http_gives_up_with_clear_rate_limit_message():
     http.session.get = lambda *a, **k: _Resp(429)
     with pytest.raises(SourceError, match="rate limited"):
         http.get("https://site.example/a")
+
+
+def test_html_to_text_skips_scripts_and_styles():
+    page = ("<html><head><title>T</title><style>.a{color:red}</style></head><body>"
+            "<script>var tracking = 1;</script><h1>SampleCorp</h1><p>We sell CRM tools.</p>"
+            "<noscript>enable js</noscript></body></html>")
+    text = html_to_text(page)
+    assert "SampleCorp" in text and "We sell CRM tools." in text
+    for junk in ("color:red", "tracking", "enable js"):
+        assert junk not in text

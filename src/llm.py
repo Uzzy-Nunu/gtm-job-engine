@@ -84,7 +84,8 @@ class BaseProvider:
         self._sleep = sleep
         self._clock = clock
         self._last = None
-        self.calls = 0
+        self.calls = 0                         # requests sent, including retries
+        self.busy_retries = 0                  # retries after "busy / rate limited" replies
         self.format_problems: list[str] = []  # short, content-free reasons answers were retried
 
     # --- public ---------------------------------------------------------
@@ -125,6 +126,7 @@ class BaseProvider:
                 last = e
                 if not e.retryable or attempt == self.max_retries:
                     raise
+                self.busy_retries += 1
                 wait = getattr(e, "wait", None) or self.backoff * (2 ** attempt)
                 self._sleep(min(wait, self.max_wait))
         raise last

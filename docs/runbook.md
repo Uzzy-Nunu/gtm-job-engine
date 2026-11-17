@@ -72,9 +72,11 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Switching provider or model:** `config.yaml` > `llm` (`provider`, `fast_model`, `draft_model`), then update `LLM_API_KEY` if the provider changes.
 - **Free-tier limits:** see your current limits at aistudio.google.com (signed in). If runs hit limits, lower `max_ai_calls_per_run` or raise `min_seconds_between_calls`.
 
-## Qualifying jobs (Milestone 4)
-- **GitHub:** Actions > **Qualify jobs** > Run workflow. `preview` shows scores and reasons without changing HubSpot; `live` renames deals, fills in Fit Score, Remote Scope and Job Analysis, links the company, and moves each deal to **Qualified** (score >= `fit_threshold`) or **Archived**.
+## Qualifying and researching jobs (Milestone 4)
+- **GitHub:** Actions > **Qualify and research jobs** > Run workflow (qualify first, then research, same mode). `preview` shows scores and reasons without changing HubSpot; `live` renames deals, fills in Fit Score, Remote Scope and Job Analysis, links the company, and moves each deal to **Qualified** (score >= `fit_threshold`) or **Archived**.
 - **Locally:** `python scripts/qualify_jobs.py --offline` (made-up demo), `--preview`, or live.
+- **Research:** each Qualified deal (highest Fit Score first) gets a company brief, a cover-letter angle and 2-3 hiring-manager titles to look up by hand, added to **Job Analysis**, and moves to **Researched**. If the company website gave little, the brief says it's based on the job posting only.
+- **Automatic runs:** after each scheduled import, and every 2 hours (07:47-21:47 Lagos, **Process captures** workflow), once the repository variable `ENABLE_SCHEDULED_AI` = `true`. Delete the variable to pause the AI steps; imports keep running.
 - **Your own captures** (paste form, capture button) are never archived for a low score, only by the hard filters. Their Job Analysis says "Hand-picked by you" when they're below the threshold.
 - **Retries:** the summary shows `AI answers retried for format` with a short reason, and the `AI format mode`. Frequent retries double free-tier usage, so report them.
 - **Skipped deals:** a deal with anything in **Pipeline Error** is skipped (NEEDS POST TEXT, JOB TEXT TOO SHORT, AI ERROR). Fix the cause (for example, paste the job text into Deal description), clear the Pipeline Error field, and the next run picks it up.

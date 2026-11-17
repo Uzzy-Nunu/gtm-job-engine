@@ -21,3 +21,15 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python scripts/build_templates.py
       - run: python -m pytest -q
+
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Worker tests (same link fixtures as the Python tests)
+        working-directory: worker
+        run: npm test

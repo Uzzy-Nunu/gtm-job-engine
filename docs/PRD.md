@@ -230,7 +230,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 
 | ID | Requirement | Priority |
 |---|---|---|
-| IN-1 | **Capture bookmarklet:** sends the current page URL, page title and any text Peace has highlighted to the Worker `/capture` endpoint, with a shared secret. | P0 |
+| IN-1 | **Capture bookmarklet:** takes the current page URL and any text Peace has highlighted and opens the Worker's `/add` form with both filled in (passed in the URL `#fragment`, which is never sent to a server). Peace clicks Save; the form sends it to `/capture` with the shared secret. **Decision (17 Nov 2026):** the bookmarklet holds no secret. The access key is typed once into the form and kept in that browser, so it never appears in a bookmark or link. | P0 |
 | IN-1b | **Paste-a-link form:** a simple, mobile-friendly page served by the Worker (`/add`, protected by the shared secret). Fields: **LinkedIn post URL** (required), **post text** (optional but recommended: Peace copies and pastes the post text), and notes. Built so Peace can add a job from her phone in under 30 seconds, for example right after tapping "Copy link to post" in the LinkedIn app. | P0 |
 | IN-1c | **Poster details from the URL:** LinkedIn post URLs usually contain the author's profile name and a unique post ID (for example `linkedin.com/posts/jane-doe-123_hiring-gtm-activity-7390000000000000000-AbCd`). The Worker reads these directly from the URL **without visiting LinkedIn**. It stores the poster's profile link (`linkedin.com/in/jane-doe-123`), a best-guess display name (shown as "unconfirmed" until checked), and the post ID, which is the duplicate-check key. It also accepts `/feed/update/urn:li:activity:…` URLs, which give the post ID but no author. | P0 |
 | IN-1d | **Job requirements from the post text:** when post text is supplied (by the paste form or highlighted with the bookmarklet), the Qualify step extracts the requirements, skills, tools, remote scope and any external job link from it. | P0 |
@@ -475,10 +475,11 @@ timezone: "Africa/Lagos"
 
 | Name | Where | Purpose |
 |---|---|---|
-| `HUBSPOT_TOKEN` | GitHub and Cloudflare | HubSpot Service Key (§9.5) |
+| `HUBSPOT_TOKEN` | GitHub (copied into the Worker at deploy time) | HubSpot Service Key (§9.5) |
+| `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub | Lets the Deploy Worker workflow publish the Worker |
 | `LLM_API_KEY` | GitHub | Gemini or Claude key |
 | `MASTER_CV` | GitHub | Master CV content |
-| `CAPTURE_SECRET` | GitHub, Cloudflare and the bookmarklet | Protects the capture endpoint |
+| `CAPTURE_SECRET` | GitHub (copied into the Worker at deploy time), typed once into the form on each device | Protects the capture endpoint |
 | `DIGEST_TO_EMAIL` | GitHub | Digest recipient |
 | Mail-sending credential | GitHub | For the digest email (method decided at build time) |
 

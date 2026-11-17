@@ -1,0 +1,56 @@
+name: Deploy Worker
+
+# Publishes the capture Worker (paste-a-link form + bookmarklet endpoint)
+# to Cloudflare. Manual: Actions > Deploy Worker > Run workflow.
+# Needs GitHub Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
+# HUBSPOT_TOKEN, CAPTURE_SECRET.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Test the Worker before deploying
+        working-directory: worker
+        run: npm test
+      - name: Check the secrets are set
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          CAPTURE_SECRET: ${{ secrets.CAPTURE_SECRET }}
+        run: |
+          missing=""
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID HUBSPOT_TOKEN CAPTURE_SECRET; do
+            [ -z "${!name}" ] && missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub Secrets:$missing (Settings > Secrets and variables > Actions)"
+            exit 1
+          fi
+          if [ ${#CAPTURE_SECRET} -lt 16 ]; then
+            echo "::error::CAPTURE_SECRET must be at least 16 characters"
+            exit 1
+          fi
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          wranglerVersion: "4.136.3"
+          secrets: |
+            HUBSPOT_TOKEN
+            CAPTURE_SECRET
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          CAPTURE_SECRET: ${{ secrets.CAPTURE_SECRET }}

@@ -1,0 +1,9 @@
+{
+  "name": "gtm-job-engine-capture",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker: paste-a-link form and capture endpoint for GTM Job Engine",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}

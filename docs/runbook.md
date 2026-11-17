@@ -52,6 +52,14 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - The run summary lists what was fetched, filtered, created and skipped. A red run means a board or HubSpot call failed; the summary names it.
 - Tuning: titles in `config.yaml` (`target_titles`, `adjacent_titles`, `excluded_title_words`), locations in `eligible_regions`, volume in `daily_import_cap`.
 
+## Capturing jobs (paste form and capture button)
+- **Phone:** open `https://gtm-job-engine-capture.<your-subdomain>.workers.dev/add`, paste the post link (LinkedIn app: **…** > **Copy link to post**), paste the post text, then tap **Save to HubSpot**. Add it to your home screen for one-tap access.
+- **Laptop:** install the **+ Capture job** button from `/bookmarklet`. On a post, highlight the text, click the button, then **Save to HubSpot**.
+- Replies: **Saved** (new deal), **Already captured** (duplicate), **Added the post text** (fills in an earlier link-only capture), or an error explaining what to do.
+- The access key is asked for once per browser. "Use a different access key" clears it.
+- **Redeploying:** Actions > **Deploy Worker** > Run workflow. Do this after changing the Worker code or the `CAPTURE_SECRET` / `HUBSPOT_TOKEN` secrets.
+- **Errors:** Cloudflare dashboard > Workers & Pages > `gtm-job-engine-capture` > **Logs**.
+
 ## Adding job titles
 All title lists are in `config.yaml`. Edit them on github.com: open the file, click the pencil icon, change it, then **Commit changes**.
 

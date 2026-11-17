@@ -1,0 +1,12 @@
+# Cloudflare Worker: paste-a-link form and capture endpoint (PRD §8, §10.1).
+# Deployed by the "Deploy Worker" GitHub workflow. Secrets are not stored
+# here: HUBSPOT_TOKEN and CAPTURE_SECRET are copied from GitHub Secrets
+# into the Worker at deploy time.
+
+name = "gtm-job-engine-capture"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+[observability]
+enabled = true          # errors appear under Workers > gtm-job-engine-capture > Logs

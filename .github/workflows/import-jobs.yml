@@ -1,7 +1,7 @@
 name: Import jobs
 
 # Pulls new jobs from the job boards into HubSpot (PRD §14 "pipeline" slot).
-# Later milestones add qualify, research and draft steps after this one.
+# Scheduled runs then qualify, research and draft (each step has its own switch).
 on:
   schedule:
     - cron: "17 5 * * *"   # 06:17 Lagos (off the hour: GitHub delays or drops :00 runs)
@@ -62,3 +62,11 @@ jobs:
           HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: python scripts/research_jobs.py
+      # Drafting has its own switch: repository variable ENABLE_SCHEDULED_DRAFTS = "true".
+      - name: Draft applications
+        if: always() && github.event_name == 'schedule' && vars.ENABLE_SCHEDULED_AI == 'true' && vars.ENABLE_SCHEDULED_DRAFTS == 'true'
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          MASTER_CV: ${{ secrets.MASTER_CV }}
+        run: python scripts/draft_jobs.py

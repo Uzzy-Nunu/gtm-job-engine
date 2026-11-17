@@ -175,3 +175,70 @@ def test_helpers_and_schemas():
     assert limit_followup("a " * 10, problems).strip() == ("a " * 10).strip()
     assert "keyword_coverage" in DRAFT_SCHEMA["required"] and "issues" in TRUTH_SCHEMA["required"]
     assert "poster" not in str(DRAFT_SCHEMA)
+
+
+# --- live mode (write=True): files, note and stage in HubSpot ---------------------------
+
+def test_live_save_attaches_files_and_moves_to_ready_for_review(tmp_path):
+    hs = FakeHubSpot()
+    deal_id = seed(hs)
+    report = drafter(hs, tmp_path=tmp_path, write=True).run()
+    assert report.ok and len(report.drafts) == 1
+    assert sorted(f["name"] for f in hs.files.values()) == [
+        "Alex-Sample-CV-SampleCorp.docx", "Alex-Sample-Cover-Letter-SampleCorp.docx"]
+    assert all(f["access"] == "PRIVATE" and f["path"].startswith("/gtm-job-engine/drafts/")
+               for f in hs.files.values())
+    notes = hs.associated("deals", deal_id, "notes")
+    assert len(notes) == 1
+    note = hs.objects["notes"][notes[0]]["properties"]
+    assert sorted(note["hs_attachment_ids"].split(";")) == sorted(hs.files)
+    assert "Truth check: passed" in note["hs_note_body"] and "<br>" in note["hs_note_body"]
+    deal = hs.objects["deals"][deal_id]["properties"]
+    assert hs.stage_label(deal["dealstage"]) == "Ready for Review"
+    assert deal["keyword_coverage"] == "75" and deal["pipeline_error"] == ""
+    assert deal["job_analysis"].startswith("Fit score: 90/100") and "\n\nDrafts (18 Nov 2026)" in deal["job_analysis"]
+
+
+def test_live_redraft_replaces_previous_drafts_section(tmp_path):
+    hs = FakeHubSpot()
+    deal_id = seed(hs, job_analysis="Fit score: 90/100\n\nDrafts (01 Nov 2026): old drafts\nold line")
+    drafter(hs, tmp_path=tmp_path, write=True).run()
+    analysis = hs.objects["deals"][deal_id]["properties"]["job_analysis"]
+    assert "old line" not in analysis and analysis.count("Drafts (") == 1
+
+
+def test_live_truth_issues_set_pipeline_error(tmp_path):
+    issues = {"issues": [{"where": "summary", "claim": "led a team of 10", "problem": "no team size in source"}]}
+    hs = FakeHubSpot()
+    deal_id = seed(hs)
+    drafter(hs, fake_ai(truth=issues), tmp_path=tmp_path, write=True).run()
+    deal = hs.objects["deals"][deal_id]["properties"]
+    assert deal["pipeline_error"].startswith("TRUTH CHECK: 1 issue(s)")
+    assert hs.stage_label(deal["dealstage"]) == "Ready for Review"
+    assert "led a team of 10" in deal["job_analysis"]
+
+
+def test_live_upload_failure_flags_deal_and_does_not_move_it(tmp_path):
+    from src.hubspot_client import HubSpotError
+
+    class NoFiles(FakeHubSpot):
+        def upload(self, *a, **kw):
+            raise HubSpotError(403, "This app hasn't been granted all required scopes", "MISSING_SCOPES", "files")
+
+    hs = NoFiles()
+    deal_id = seed(hs)
+    report = drafter(hs, tmp_path=tmp_path, write=True).run()
+    assert not report.ok and report.drafts == [] and "saving to HubSpot failed" in report.errors[0][2]
+    deal = hs.objects["deals"][deal_id]["properties"]
+    assert deal["pipeline_error"].startswith("DRAFT ERROR")
+    assert hs.stage_label(deal["dealstage"]) == "Researched" and hs.all("notes") == []
+
+
+def test_preview_writes_nothing_to_hubspot(tmp_path):
+    hs = FakeHubSpot()
+    seed(hs)
+    before = len(hs.calls)
+    drafter(hs, tmp_path=tmp_path).run()
+    assert hs.files == {} and hs.all("notes") == []
+    assert not any(m in ("PATCH", "UPLOAD") or (m == "POST" and not p.endswith("/search"))
+                   for m, p in hs.calls[before:])

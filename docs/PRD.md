@@ -218,7 +218,7 @@ Uses default properties: name, domain, website, description (company brief). Lin
 Default name properties plus the built-in **LinkedIn URL** property (`hs_linkedin_url`) for the poster's profile link. No custom contact properties (the old `pipeline_role` field is dropped: contacts the system creates are always posters, and hiring managers are added by hand). Linked to the deal and the company.
 
 ### 9.5 Authentication
-HubSpot stopped allowing new legacy private apps on 26 Oct 2026. The system uses a **Service Key** (Development > Keys > Service keys), sent as a Bearer token and stored as the `HUBSPOT_TOKEN` secret. Minimum scopes: deal, contact and company object read/write, and deal and contact property-settings read/write. `files.write` is added in M5.
+HubSpot stopped allowing new legacy private apps on 26 Oct 2026. The system uses a **Service Key** (Development > Keys > Service keys), sent as a Bearer token and stored as the `HUBSPOT_TOKEN` secret. Minimum scopes: deal, contact and company object read/write, and deal and contact property-settings read/write. M5 adds the `files` scope (upload drafts as private files; a note with attachments links them to the deal).
 
 ---
 
@@ -415,8 +415,8 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 
 | Job | Schedule | Runs |
 |---|---|---|
-| `pipeline` (`import-jobs.yml`) | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research (→ draft from M5). AI steps run only when the repository variable `ENABLE_SCHEDULED_AI` is `true` |
-| `process-captures` | Every 2 hours at :47, 06:47–20:47 UTC (07:47–21:47 Lagos) | qualify → research (→ draft from M5) |
+| `pipeline` (`import-jobs.yml`) | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research → draft. AI steps run only when the repository variable `ENABLE_SCHEDULED_AI` is `true`; drafting also needs `ENABLE_SCHEDULED_DRAFTS` = `true` |
+| `process-captures` | Every 2 hours at :47, 06:47–20:47 UTC (07:47–21:47 Lagos) | qualify → research → draft (draft only when `ENABLE_SCHEDULED_DRAFTS` = `true`) |
 | `digest` | 06:30 UTC daily (07:30 Lagos) | Daily digest |
 | `weekly` | Monday 07:00 UTC | Weekly summary (P1) |
 

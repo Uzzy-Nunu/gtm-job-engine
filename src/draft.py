@@ -18,6 +18,7 @@ logs (GitHub Actions logs on a public repo are public).
 
 from __future__ import annotations
 
+import html
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timezone
@@ -40,6 +41,9 @@ MAX_ANALYSIS = 6_000
 NOTE_LIMIT = 300        # characters (DR-4)
 FOLLOWUP_LIMIT = 120    # words (DR-5)
 LETTER_WORDS = (200, 300)
+FILES_FOLDER = "/gtm-job-engine/drafts"
+DRAFTS_MARKER = "\n\nDrafts ("
+NOTE_TO_DEAL = 214      # HubSpot-defined association type: note -> deal
 
 _BULLETS = {"type": "array", "items": {
     "type": "object", "required": ["source_id", "text"],
@@ -266,6 +270,58 @@ class Drafter:
         draft.letter_path = render_cover_letter(
             draft.letter, self.out_dir / f"{file_stem(person, 'Cover Letter', draft.company)}.docx")
 
+    # --- saving to HubSpot (live mode) ---------------------------------------------
+    def summary_text(self, draft: Draft) -> str:
+        """The private review notes for a draft (stored in HubSpot only, never logged)."""
+        lines = [f"Drafts ({self.today:%d %b %Y}): CV and cover letter attached to the note on this deal."]
+        if not draft.truth_checked:
+            lines.append("TRUTH CHECK: NOT RUN. Review every claim by hand before using these drafts.")
+        elif draft.truth_issues:
+            lines.append(f"TRUTH CHECK: {len(draft.truth_issues)} issue(s) to fix before applying:")
+            lines += [f"- [{i['where']}] \"{i['claim']}\": {i['problem']}" for i in draft.truth_issues]
+        else:
+            lines.append("Truth check: passed (every claim traced to your master CV).")
+        lines.append(f"Keyword coverage: {draft.coverage_pct}%"
+                     + (f" | Covered: {', '.join(draft.covered)}" if draft.covered else ""))
+        if draft.missing:
+            lines.append(f"Missing (don't add these unless true): {', '.join(draft.missing)}")
+        lines.append(f"Connection note ({len(draft.connection_note)} chars):\n{draft.connection_note}")
+        lines.append(f"Follow-up message ({len(draft.followup.split())} words):\n{draft.followup}")
+        if draft.problems:
+            lines.append("Draft notes:")
+            lines += [f"- {p}" for p in draft.problems]
+        return "\n".join(lines)
+
+    def save(self, draft: Draft):
+        """Upload both files, attach them to a note on the deal, record the review
+        notes and move the deal to Ready for Review. Raises on any failure, before
+        the deal moves, so nothing is half-done silently."""
+        file_ids = [self.hs.upload(path.name, path.read_bytes(), FILES_FOLDER)["id"]
+                    for path in (draft.cv_path, draft.letter_path)]
+        summary = self.summary_text(draft)
+        self.hs.post("/crm/v3/objects/notes", {
+            "properties": {"hs_timestamp": self._now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                           "hs_note_body": html.escape(summary).replace("\n", "<br>"),
+                           "hs_attachment_ids": ";".join(str(i) for i in file_ids)},
+            "associations": [{"to": {"id": draft.deal_id},
+                              "types": [{"associationCategory": "HUBSPOT_DEFINED",
+                                         "associationTypeId": NOTE_TO_DEAL}]}]})
+        deal = self.hs.get(f"/crm/v3/objects/deals/{draft.deal_id}",
+                           params={"properties": "job_analysis"}) or {}
+        analysis = ((deal.get("properties") or {}).get("job_analysis") or "").split(DRAFTS_MARKER)[0].rstrip()
+        flag = ""
+        if not draft.truth_checked:
+            flag = "TRUTH CHECK NOT RUN: review every claim in the drafts by hand, then clear this field."
+        elif draft.truth_issues:
+            flag = (f"TRUTH CHECK: {len(draft.truth_issues)} issue(s) in the drafts. See Job Analysis, "
+                    "fix the files, then clear this field.")
+        self.hs.patch(f"/crm/v3/objects/deals/{draft.deal_id}", {"properties": {
+            "job_analysis": (analysis + "\n\n" + summary).strip()[:60_000],
+            "keyword_coverage": draft.coverage_pct,
+            "pipeline_error": flag,
+            "dealstage": self.stage["Ready for Review"],
+        }})
+
     # --- run ---------------------------------------------------------------------
     def run(self, max_ai_calls: int = 40) -> DraftReport:
         report = DraftReport()
@@ -283,7 +339,15 @@ class Drafter:
                 report.waiting = len(deals) - i
                 break
             try:
-                report.drafts.append(self.draft_one(deal))
+                draft = self.draft_one(deal)
+                if self.write:
+                    try:
+                        self.save(draft)
+                    except HubSpotError as e:
+                        self._flag(deal["id"], f"DRAFT ERROR: {str(e)[:300]}")
+                        report.errors.append((deal["id"], name, f"saving to HubSpot failed: {str(e)[:200]}"))
+                        continue
+                report.drafts.append(draft)
             except LLMError as e:
                 if e.retryable:
                     report.stopped = f"AI busy or out of quota ({e}). Remaining deals wait for the next run."
@@ -293,3 +357,10 @@ class Drafter:
         report.ai_calls = self.llm.calls
         report.busy_retries = getattr(self.llm, "busy_retries", 0)
         return report
+
+    def _flag(self, deal_id: str, message: str):
+        """Mark a deal so it isn't redrafted until a human clears the flag."""
+        try:
+            self.hs.patch(f"/crm/v3/objects/deals/{deal_id}", {"properties": {"pipeline_error": message}})
+        except HubSpotError:
+            pass

@@ -8,6 +8,7 @@ readable.
 
 from __future__ import annotations
 
+import json as _json
 import os
 import time
 from pathlib import Path
@@ -15,6 +16,9 @@ from pathlib import Path
 import requests
 
 BASE_URL = "https://api.hubapi.com"
+# Files API: the classic path first, then the dated one HubSpot documents now.
+FILE_UPLOAD_PATHS = ("/files/v3/files", "/files/2026-09/files")
+DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
 class HubSpotError(RuntimeError):
@@ -58,11 +62,13 @@ class HubSpotClient:
         self.max_retries = max_retries
         self.timeout = timeout
 
-    def request(self, method: str, path: str, *, params=None, json=None):
+    def request(self, method: str, path: str, *, params=None, json=None, files=None, data=None):
         url = BASE_URL + path
+        # Multipart uploads set their own Content-Type (None removes the JSON default).
+        headers = {"Content-Type": None} if files else None
         for attempt in range(self.max_retries + 1):
-            resp = self.session.request(method, url, params=params, json=json,
-                                        timeout=self.timeout)
+            resp = self.session.request(method, url, params=params, json=json, files=files, data=data,
+                                        headers=headers, timeout=self.timeout)
             if resp.status_code == 429 or resp.status_code >= 500:
                 if attempt < self.max_retries:
                     wait = float(resp.headers.get("Retry-After", 2 ** attempt * 2))
@@ -95,6 +101,20 @@ class HubSpotClient:
 
     def put(self, path, json=None):
         return self.request("PUT", path, json=json)
+
+    def upload(self, filename: str, content: bytes, folder_path: str, access: str = "PRIVATE") -> dict:
+        """Upload one file to the HubSpot file manager. Returns its record (id, url, ...)."""
+        files = {"file": (filename, content, DOCX_TYPE)}
+        data = {"options": _json.dumps({"access": access}), "folderPath": folder_path, "fileName": filename}
+        last = None
+        for path in FILE_UPLOAD_PATHS:
+            try:
+                return self.request("POST", path, files=files, data=data)
+            except HubSpotError as e:
+                if e.status != 404:
+                    raise
+                last = e
+        raise last
 
     def delete(self, path, params=None):
         return self.request("DELETE", path, params=params)

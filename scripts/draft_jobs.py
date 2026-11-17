@@ -3,7 +3,7 @@
 Modes:
   python scripts/draft_jobs.py --offline   # made-up CV, job and AI answers; files in output/drafts/offline
   python scripts/draft_jobs.py --preview   # real deals, master CV and AI; files in output/drafts, HubSpot untouched
-  python scripts/draft_jobs.py             # live (Milestone 5 part 3): files attached in HubSpot
+  python scripts/draft_jobs.py             # live: files attached in HubSpot, deals to Ready for Review
 
 Needs HUBSPOT_TOKEN, LLM_API_KEY and MASTER_CV (or MASTER_CV_PATH) except in
 --offline mode. The log shows counts and scores only, never CV text, letters or
@@ -69,12 +69,13 @@ def main(argv=None) -> int:
         hs, llm, master = HubSpotClient(), make_llm(config), load_text()
         label, out = "PREVIEW (real data and AI; files saved locally, HubSpot untouched)", OUT
     else:
-        print("Live drafting (files attached in HubSpot) arrives in Milestone 5 part 3. "
-              "Use --preview or --offline for now.")
-        return 2
+        load_dotenv(ROOT / ".env")
+        hs, llm, master = HubSpotClient(), make_llm(config), load_text()
+        label, out = "LIVE (files attached in HubSpot, deals moved to Ready for Review)", OUT
 
     print(f"== Draft jobs: {label}")
-    report = Drafter(hs, llm, config, master, out, write=False).run(max_ai_calls=max_calls)
+    live = not (args.offline or args.preview)
+    report = Drafter(hs, llm, config, master, out, write=live).run(max_ai_calls=max_calls)
     lines = report.lines()
     print("\n".join(lines))
     if report.drafts and not os.environ.get("GITHUB_ACTIONS"):

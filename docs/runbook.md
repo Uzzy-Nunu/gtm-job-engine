@@ -73,7 +73,7 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Free-tier limits:** see your current limits at aistudio.google.com (signed in). If runs hit limits, lower `max_ai_calls_per_run` or raise `min_seconds_between_calls`.
 
 ## Qualifying and researching jobs (Milestone 4)
-- **GitHub:** Actions > **Qualify and research jobs** > Run workflow (qualify first, then research, same mode). `preview` shows scores and reasons without changing HubSpot; `live` renames deals, fills in Fit Score, Remote Scope and Job Analysis, links the company, and moves each deal to **Qualified** (score >= `fit_threshold`) or **Archived**.
+- **GitHub:** Actions > **Qualify, research and draft jobs** > Run workflow (qualify, then research, then draft, same mode). `preview` shows scores and reasons without changing HubSpot; `live` renames deals, fills in Fit Score, Remote Scope and Job Analysis, links the company, and moves each deal to **Qualified** (score >= `fit_threshold`) or **Archived**.
 - **Locally:** `python scripts/qualify_jobs.py --offline` (made-up demo), `--preview`, or live.
 - **Research:** each Qualified deal (highest Fit Score first) gets a company brief, a cover-letter angle and 2-3 hiring-manager titles to look up by hand, added to **Job Analysis**, and moves to **Researched**. If the company website gave little, the brief says it's based on the job posting only.
 - **Missing websites:** research tries to find the company's site (job text clues, apply link, an AI suggestion, then name guesses), checks it loads and names the company, and only saves it if the AI confirms it's the same company. The summary shows `website found via ...` or `rejected <domain> (a different company)`. If it can't find or confirm one, add the domain to the company in HubSpot and move the deal back to **Qualified** to re-research.
@@ -84,6 +84,17 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Archived by mistake?** Read the reason at the top of **Job Analysis**, then drag the deal back to **New** (and fix the job text if needed) to re-score it, or straight to **Qualified**.
 - **Tuning:** `fit_threshold` and `rubric` points in `config.yaml`; the prompt in `prompts/qualify.md`.
 - **Free-tier quota:** at most `max_ai_calls_per_run` jobs per run, one request each. If the AI is busy, the run stops cleanly and the rest wait for the next run.
+
+## Drafting applications (Milestone 5)
+- **What it makes** for each **Researched** deal (highest Fit Score first, up to `daily_draft_cap` a day): a tailored CV and a cover letter (Word files), a LinkedIn connection note (300 characters max), a follow-up message (120 words max) and a keyword coverage check.
+- **Where it goes (live):** both files are uploaded to HubSpot's file manager as **private** files (folder `gtm-job-engine/drafts`) and attached to a note on the deal. The deal's **Job Analysis** gets a `Drafts (date)` section with the truth-check result, coverage, missing keywords and both messages; **Keyword Coverage** is filled in; the deal moves to **Ready for Review**. Re-drafting replaces the old `Drafts` section.
+- **Truth check:** a second AI pass compares every reworded claim with your master CV. If it finds problems (or couldn't run), **Pipeline Error** says `TRUTH CHECK: ...` and the issues are listed in Job Analysis. Fix the Word files, then clear Pipeline Error. Skills, tools, employers, titles and dates that aren't in the master CV are dropped by code before the AI ever sees the result.
+- **If saving fails** (for example a missing key permission), the deal stays in **Researched** with `DRAFT ERROR: ...` in Pipeline Error. Fix the cause, clear the field, and the next run retries.
+- **GitHub:** Actions > **Qualify, research and draft jobs** > Run workflow. `preview` drafts and checks but writes nothing to HubSpot (the files stay on GitHub's temporary machine and are deleted; the log shows counts only).
+- **Locally:** `python scripts/draft_jobs.py --offline` (made-up demo), `--preview` (real deals, files saved in `output/drafts`, git-ignored), or live.
+- **Automatic drafting:** after scheduled imports and in **Process captures**, only when the repository variable `ENABLE_SCHEDULED_DRAFTS` = `true` (and `ENABLE_SCHEDULED_AI` = `true` for the import workflow). Delete it to pause drafting only.
+- **HubSpot key permission:** the Service Key needs the `files` scope to upload. If a run says `required scopes`, add the scope it names (Development > Keys > Service keys > your key > Edit scopes) and run again.
+- **Before applying:** open the CV, copy all, paste into Notepad: it should read cleanly, top to bottom. Check it's no more than 2 pages in Word. You send everything yourself; nothing is applied or sent automatically.
 
 ## Adding job titles
 All title lists are in `config.yaml`. Edit them on github.com: open the file, click the pencil icon, change it, then **Commit changes**.

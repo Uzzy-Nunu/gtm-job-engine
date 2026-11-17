@@ -1,7 +1,8 @@
 name: Process captures
 
 # Every 2 hours, 07:47-21:47 Lagos: qualify New deals (your captures and any
-# imports), then research Qualified ones (PRD §14 "process-captures").
+# imports), research Qualified ones, then draft Researched ones when the
+# repository variable ENABLE_SCHEDULED_DRAFTS is "true" (PRD §14 "process-captures").
 # Scheduled runs only happen once the repository variable ENABLE_SCHEDULED_AI
 # is set to "true". Manual runs always work.
 on:
@@ -37,3 +38,6 @@ jobs:
       - name: Research jobs
         if: always()
         run: python scripts/research_jobs.py
+      - name: Draft applications
+        if: always() && vars.ENABLE_SCHEDULED_DRAFTS == 'true'
+        run: python scripts/draft_jobs.py

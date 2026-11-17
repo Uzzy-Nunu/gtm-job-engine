@@ -51,6 +51,7 @@ class FakeHubSpot:
                        for i, (label, p) in enumerate(STAGES)],
         }
         self.calls: list[tuple[str, str]] = []
+        self.files: dict[str, dict] = {}
 
     # --- helpers for tests and dry-run reports -------------------------
     def all(self, obj: str) -> list[dict]:
@@ -87,7 +88,14 @@ class FakeHubSpot:
             if len(parts) == 5 and parts[4] == "search":
                 return self._search(obj, json)
             if len(parts) == 4:
-                return self._create(obj, json.get("properties", {}), path)
+                record = self._create(obj, json.get("properties", {}), path)
+                for assoc in json.get("associations", []):
+                    to_id = str(assoc["to"]["id"])
+                    to_obj = next((o for o in OBJECTS if to_id in self.objects[o] and o != obj), None)
+                    if to_obj:
+                        self.associations.add((obj, record["id"], to_obj, to_id))
+                        self.associations.add((to_obj, to_id, obj, record["id"]))
+                return record
         raise HubSpotError(404, f"FakeHubSpot has no POST {path}", "NOT_IMPLEMENTED", path)
 
     def patch(self, path, json):
@@ -117,6 +125,13 @@ class FakeHubSpot:
             self.associations.add((t, t_id, f, f_id))
             return {"status": "COMPLETE"}
         raise HubSpotError(404, f"FakeHubSpot has no PUT {path}", "NOT_IMPLEMENTED", path)
+
+    def upload(self, filename: str, content: bytes, folder_path: str, access: str = "PRIVATE") -> dict:
+        self.calls.append(("UPLOAD", folder_path))
+        fid = str(next(self._ids))
+        self.files[fid] = {"id": fid, "name": filename, "path": f"{folder_path}/{filename}",
+                           "access": access, "size": len(content), "url": f"https://files.example/{fid}"}
+        return copy.deepcopy(self.files[fid])
 
     def delete(self, path, params=None):
         self.calls.append(("DELETE", path))

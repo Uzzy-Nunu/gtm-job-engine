@@ -15,7 +15,7 @@ from src.hubspot_client import HubSpotError
 from src.hubspot_schema import PIPELINE_LABEL, STAGES
 
 UNIQUE_PROPERTIES = {"deals": {"job_url"}}
-OBJECTS = ("deals", "contacts", "companies", "notes")
+OBJECTS = ("deals", "contacts", "companies", "notes", "tasks")
 
 
 def _now_iso() -> str:
@@ -36,7 +36,8 @@ def _as_datetime(value):
     text = str(value)
     if text.isdigit():
         return datetime.fromtimestamp(int(text) / 1000, tz=timezone.utc)
-    return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    when = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)   # date properties: midnight UTC
 
 
 class FakeHubSpot:
@@ -196,12 +197,16 @@ class FakeHubSpot:
             hits.sort(key=lambda r: (r["properties"].get(key) is None, _sortable(r["properties"].get(key))),
                       reverse=sort.get("direction") == "DESCENDING")
         limit = int(body.get("limit", 10))
+        start = int(body.get("after") or 0)
         props = body.get("properties")
         results = []
-        for rec in hits[:limit]:
+        for rec in hits[start:start + limit]:
             rec = copy.deepcopy(rec)
             if props:
                 rec["properties"] = {k: v for k, v in rec["properties"].items()
                                      if k in props or k == "hs_object_id"}
             results.append(rec)
-        return {"total": len(hits), "results": results}
+        page = {"total": len(hits), "results": results}
+        if start + limit < len(hits):
+            page["paging"] = {"next": {"after": str(start + limit)}}
+        return page

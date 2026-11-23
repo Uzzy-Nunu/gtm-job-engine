@@ -5,8 +5,12 @@ Modes:
   python scripts/send_digest.py --preview   # real HubSpot; log shows counts only, nothing sent
   python scripts/send_digest.py             # real HubSpot; emails the digest via Gmail
 
+Before the digest is built, Applied deals with no update for `digest.follow_up_days`
+get a follow-up task in HubSpot (send mode only; preview counts what it would add).
+
 Needs HUBSPOT_TOKEN, GMAIL_ADDRESS, GMAIL_APP_PASSWORD (and optionally
-DIGEST_TO_EMAIL) except in --offline mode. HubSpot is only read, never changed.
+DIGEST_TO_EMAIL) except in --offline mode. The only HubSpot change is adding
+follow-up tasks; deals themselves are never changed.
 The log never shows deal names (the repo is public); only the email does.
 """
 
@@ -24,6 +28,7 @@ sys.path.insert(0, str(ROOT))
 import yaml  # noqa: E402
 
 from src.digest import DigestBuilder  # noqa: E402
+from src.followups import FollowUpTasks  # noqa: E402
 from src.fake_hubspot import FakeHubSpot  # noqa: E402
 from src.hubspot_client import HubSpotClient, HubSpotError, load_dotenv  # noqa: E402
 from src.mailer import FakeMailer, GmailMailer, MailError  # noqa: E402
@@ -78,12 +83,19 @@ def main(argv=None) -> int:
                 return 1
 
     print(f"== Daily digest: {label}")
+    write_tasks = not args.preview   # offline writes only to the in-memory fake
     try:
+        tasks = FollowUpTasks(hs, config).run(write=write_tasks)
         digest = DigestBuilder(hs, config).build()
     except HubSpotError as e:
         print(f"! Couldn't read HubSpot: {e}")
         return 1
-    lines = digest.log_lines()
+    for line in digest.follow_ups:
+        line.task = line.id in tasks.task_deal_ids
+    if tasks.errors:
+        digest.notes.append(f"Couldn't add {len(tasks.errors)} follow-up task(s) in HubSpot: {tasks.errors[0]} "
+                            "(see docs/runbook.md > Troubleshooting).")
+    lines = [tasks.line(write=write_tasks)] + digest.log_lines()
     print("\n".join(lines))
 
     if args.offline:
@@ -105,6 +117,9 @@ def main(argv=None) -> int:
     if summary:
         with open(summary, "a", encoding="utf-8") as f:
             f.write(f"## Daily digest: {label}\n\n```\n" + "\n".join(lines) + "\n```\n")
+    if tasks.errors:
+        print("! Follow-up tasks failed (the digest itself was built): " + tasks.errors[0])
+        return 1   # red run + alert email, so a missing HubSpot scope gets noticed
     return 0
 
 

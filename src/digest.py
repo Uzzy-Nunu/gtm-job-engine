@@ -1,4 +1,4 @@
-"""Daily digest (PRD §10.6 DG-1, DG-2 listing, §10.7 OP-3).
+"""Daily digest (PRD §10.6 DG-1, DG-2, §10.7 OP-3).
 
 Reads HubSpot (never writes) and builds one email:
   - deals ready for review (title, company, fit score, coverage, link)
@@ -38,6 +38,7 @@ class DealLine:
     stage: str = ""
     days: int = 0
     link: str = ""
+    task: bool = False      # an open follow-up task exists in HubSpot
 
 
 @dataclass
@@ -77,7 +78,8 @@ class Digest:
                         f"fit {d.score}" if d.score else "", f"coverage {d.coverage}%" if d.coverage else "",
                         d.flag) if x)) for d in self.ready], self.ready, self.ready_total))
         out.append((f"Follow-ups due ({self.follow_ups_total})",
-                    [deal(d, f"applied, no update for {d.days} days") for d in self.follow_ups],
+                    [deal(d, f"applied, no update for {d.days} days" + ("; task in HubSpot" if d.task else ""))
+                     for d in self.follow_ups],
                     self.follow_ups, self.follow_ups_total))
         out.append((f"Needs you ({self.attention_total})",
                     [deal(d, f"{d.stage}: {d.flag}") for d in self.attention], self.attention, self.attention_total))

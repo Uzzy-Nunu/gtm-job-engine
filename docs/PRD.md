@@ -295,7 +295,11 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 |---|---|---|
 | DG-1 | **Daily digest at 07:30 Lagos:** counts per stage, a list of `Ready for Review` deals (title, company, score, link), and any errors. | P0 |
 | DG-2 | **Follow-up nudge:** deals in `Applied` for 5 or more days with no update get a HubSpot task and a mention in the digest. | P1 |
+
+**Built (M6, 23 Nov 2026):** the daily digest run adds one task per quiet `Applied` deal (`Follow up: <deal>`, due today, linked to the deal). A deal with an open follow-up task never gets a second; once the task is completed, a new one can appear after another quiet spell. A task failure (for example a missing HubSpot scope) is listed in the digest and turns the run red.
 | DG-3 | **Weekly summary (Monday):** the funnel numbers in §3. | P1 |
+
+**Built (M6, 23 Nov 2026):** `weekly.yml` emails numbers only: new jobs, qualified rate (of this week's arrivals that have been processed), applied (by Applied Date), keyword coverage and truth-check pass rate across drafted deals, interview rate, failed runs. The free CRM keeps no stage history, so the numbers come from each deal's current stage and dates; Peace sets Applied Date when she applies.
 
 ### 10.7 Operations
 
@@ -418,7 +422,7 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 | `pipeline` (`import-jobs.yml`) | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research → draft. AI steps run only when the repository variable `ENABLE_SCHEDULED_AI` is `true`; drafting also needs `ENABLE_SCHEDULED_DRAFTS` = `true` |
 | `process-captures` | Every 2 hours at :47, 06:47–20:47 UTC (07:47–21:47 Lagos) | qualify → research → draft (draft only when `ENABLE_SCHEDULED_DRAFTS` = `true`) |
 | `digest` (`digest.yml`) | 06:27 UTC daily (07:27 Lagos; off the half hour) | Daily digest. Runs only when the repository variable `ENABLE_DIGEST` is `true`. Failed scheduled runs of any workflow also email an alert |
-| `weekly` | Monday 07:00 UTC | Weekly summary (P1) |
+| `weekly` (`weekly.yml`) | Monday 07:07 UTC (08:07 Lagos; off the hour) | Weekly summary. Runs only when `ENABLE_DIGEST` is `true` |
 
 **Notes:**
 - Scheduled runs can start a few minutes late.

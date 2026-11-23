@@ -103,6 +103,8 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Sending:** through Gmail with an app password (it can send, not read your mail). Secrets: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, and optionally `DIGEST_TO_EMAIL` (defaults to the Gmail address).
 - **Turning on the daily schedule:** repository variable `ENABLE_DIGEST` = `true`. Delete it to pause.
 - **By hand:** Actions > **Daily digest** > Run workflow (`send` emails it now; `preview` shows counts only). Locally: `python scripts/send_digest.py --offline` (made-up deals), `--preview` (saves `output/digest-preview.html`), or no flag to send.
+- **Follow-up tasks:** each digest run adds a HubSpot task (`Follow up: <deal>`, due today) to Applied deals with no update for 5 days. Find them under CRM > Tasks (they have no owner, so use the "All tasks" view). Send the follow-up, mark the task complete and move the deal to Followed Up. A deal never gets a second task while one is open.
+- **Weekly summary** (Mondays about 08:07 Lagos, workflow **Weekly summary**, same `ENABLE_DIGEST` switch): new jobs, qualified rate, applied this week, keyword coverage, truth-check pass rate, interview rate and failed runs. Numbers only. **Set Applied Date on a deal when you apply**, or the applied count stays at 0. By hand: Actions > Weekly summary > Run workflow; locally `python scripts/send_weekly.py --offline` or `--preview`.
 - **Changing the app password:** create a new one in your Google Account (Security > App passwords), update `GMAIL_APP_PASSWORD`, and delete the old one in Google.
 
 ## Adding job titles
@@ -153,6 +155,7 @@ Listed in [PRD §16](PRD.md#16-configuration-and-secrets). Stored only in GitHub
 
 ## Troubleshooting
 - **A failed-run email arrived:** open the link, click the red step and read its last lines. Busy AI (Gemini 503/429) needs nothing: the deals wait for the next run. A HubSpot `required scopes` message means the Service Key needs that scope added (Development > Keys > Service keys > GTM Job Engine > Edit).
+- **Digest run is red with "Follow-up tasks failed":** the digest was still emailed. If the message mentions `required scopes`, add the scope names it lists to the Service Key (Development > Keys > Service keys > GTM Job Engine > Edit > Add new scope), then re-run Daily digest.
 - **No digest arrived:** check the Daily digest run on GitHub. "Gmail refused the login" means the app password is wrong or was deleted: make a new one and update `GMAIL_APP_PASSWORD`. Also check your spam folder once and mark it Not spam.
 - **A deal is stuck:** look at its Pipeline Error field, fix the cause, then clear the field. It's picked up on the next run.
 - **Schedules stopped:** GitHub pauses schedules on public repos after 60 days with no commits. Any commit (even a docs edit) restarts them.

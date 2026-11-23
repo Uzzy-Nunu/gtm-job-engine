@@ -1,0 +1,47 @@
+name: Weekly summary
+
+# Emails the weekly funnel numbers every Monday at about 08:07 Lagos (PRD §10.6
+# DG-3): new jobs, qualified rate, applied, keyword coverage, truth-check flags,
+# interview rate and failed runs. Numbers only; reads HubSpot only. Scheduled
+# runs happen once the repository variable ENABLE_DIGEST is "true".
+# Manual: Actions > Weekly summary > Run workflow.
+on:
+  schedule:
+    - cron: "7 7 * * 1"   # Monday, off the hour: GitHub delays or drops :00 runs
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "preview = numbers in the log only. send = email the summary."
+        type: choice
+        options: [preview, send]
+        default: send
+
+permissions:
+  contents: read
+  actions: read     # to count failed runs from the last 7 days
+
+jobs:
+  weekly:
+    if: github.event_name != 'schedule' || vars.ENABLE_DIGEST == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+      GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      DIGEST_TO_EMAIL: ${{ secrets.DIGEST_TO_EMAIL }}
+      GITHUB_TOKEN: ${{ github.token }}
+      MODE_FLAG: ${{ inputs.mode == 'preview' && '--preview' || ' ' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Build and send the weekly summary
+        run: python scripts/send_weekly.py $MODE_FLAG
+      - name: Email an alert if this run failed
+        if: failure() && github.event_name == 'schedule'
+        continue-on-error: true
+        run: python scripts/send_alert.py "Weekly summary"

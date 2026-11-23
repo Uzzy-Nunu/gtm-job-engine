@@ -2,7 +2,7 @@
 
 **A human-in-the-loop system that finds remote Go-to-Market (GTM) roles, scores fit, researches the company and drafts tailored, ATS-friendly applications for review in HubSpot.**
 
-> Status: 🚧 In build. Milestones 0-4 complete (foundations, HubSpot, baseline, intake, AI qualification and research); drafting (M5) next. See [roadmap](#roadmap).
+> Status: 🚧 In build. Milestones 0-5 complete (foundations, HubSpot, baseline, intake, AI qualification and research, truth-checked drafting); operations (M6) next. See [roadmap](#roadmap).
 
 ---
 
@@ -74,8 +74,8 @@ tests/fixtures/      made-up sample data only
 | M2 | Manual baseline (timed by hand) | ✅ Done (1 application) |
 | M3 | Intake: job boards, capture bookmarklet, paste-a-link form | ✅ Done |
 | M4 | Qualify and research | ✅ Done |
-| M5 | Draft: tailored CV, cover letter, messages, truth check | ⏳ Next |
-| M6 | Operations: schedules, digest, alerts, dry run | |
+| M5 | Draft: tailored CV, cover letter, messages, truth check | ✅ Done |
+| M6 | Operations: schedules, digest, alerts, dry run | ⏳ Next |
 | M7 | Go live | |
 | M8 | Portfolio write-up | |
 | M9 | Scale to 15 a day | |

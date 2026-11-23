@@ -41,3 +41,13 @@ jobs:
       - name: Draft applications
         if: always() && vars.ENABLE_SCHEDULED_DRAFTS == 'true'
         run: python scripts/draft_jobs.py
+
+      # Emails you a link to this run if a scheduled run failed (PRD OP-3).
+      - name: Email an alert if this run failed
+        if: failure() && github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          DIGEST_TO_EMAIL: ${{ secrets.DIGEST_TO_EMAIL }}
+        run: python scripts/send_alert.py "Process captures"

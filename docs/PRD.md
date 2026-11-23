@@ -417,7 +417,7 @@ Drafting is capped each day, short models handle extraction and scoring, and the
 |---|---|---|
 | `pipeline` (`import-jobs.yml`) | 05:17 and 13:17 UTC daily (off the hour; GitHub delays or drops :00 runs) | intake (job boards) → qualify → research → draft. AI steps run only when the repository variable `ENABLE_SCHEDULED_AI` is `true`; drafting also needs `ENABLE_SCHEDULED_DRAFTS` = `true` |
 | `process-captures` | Every 2 hours at :47, 06:47–20:47 UTC (07:47–21:47 Lagos) | qualify → research → draft (draft only when `ENABLE_SCHEDULED_DRAFTS` = `true`) |
-| `digest` | 06:30 UTC daily (07:30 Lagos) | Daily digest |
+| `digest` (`digest.yml`) | 06:27 UTC daily (07:27 Lagos; off the half hour) | Daily digest. Runs only when the repository variable `ENABLE_DIGEST` is `true`. Failed scheduled runs of any workflow also email an alert |
 | `weekly` | Monday 07:00 UTC | Weekly summary (P1) |
 
 **Notes:**
@@ -492,8 +492,8 @@ timezone: "Africa/Lagos"
 | `LLM_API_KEY` | GitHub | Gemini or Claude key |
 | `MASTER_CV` | GitHub | Master CV content |
 | `CAPTURE_SECRET` | GitHub (copied into the Worker at deploy time), typed once into the form on each device | Protects the capture endpoint |
-| `DIGEST_TO_EMAIL` | GitHub | Digest recipient |
-| Mail-sending credential | GitHub | For the digest email (method decided at build time) |
+| `DIGEST_TO_EMAIL` | GitHub | Digest and alert recipient (optional; defaults to `GMAIL_ADDRESS`) |
+| `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD` | GitHub | Gmail account and app password that send the digest and failure alerts |
 
 ---
 
@@ -557,7 +557,7 @@ timezone: "Africa/Lagos"
 
 ## 21. Open questions
 1. ~~Production AI provider~~ **Decided:** free Gemini tier in Phase 1. Paid Gemini or Claude to be chosen at Phase 2.
-2. Digest email sending method (Gmail app password vs HubSpot vs another provider).
+2. ~~Digest email sending method~~ **Decided (23 Nov 2026):** Gmail SMTP with an app password (`GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`). Send-only; no inbox access.
 3. ~~HubSpot free-plan custom property limits~~ **Decided:** 10 in total. See §9.2.
 4. The list of target companies' job boards (started in M0, finalised and verified in M3 when the source modules are built).
 

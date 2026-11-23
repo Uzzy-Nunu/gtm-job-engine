@@ -1,0 +1,46 @@
+name: Daily digest
+
+# Emails the daily digest at about 07:27 Lagos (PRD §10.6): deals ready for
+# review, follow-ups due, deals that need you, failed runs and stage counts.
+# Reads HubSpot only. Scheduled runs happen once the repository variable
+# ENABLE_DIGEST is "true". Manual: Actions > Daily digest > Run workflow.
+on:
+  schedule:
+    - cron: "27 6 * * *"   # off the hour: GitHub delays or drops :00 runs
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "preview = counts in the log only. send = email the digest."
+        type: choice
+        options: [preview, send]
+        default: send
+
+permissions:
+  contents: read
+  actions: read     # to list failed runs from the last 24 hours
+
+jobs:
+  digest:
+    if: github.event_name != 'schedule' || vars.ENABLE_DIGEST == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+      GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      DIGEST_TO_EMAIL: ${{ secrets.DIGEST_TO_EMAIL }}
+      GITHUB_TOKEN: ${{ github.token }}
+      MODE_FLAG: ${{ inputs.mode == 'preview' && '--preview' || ' ' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Build and send the digest
+        run: python scripts/send_digest.py $MODE_FLAG
+      - name: Email an alert if this run failed
+        if: failure() && github.event_name == 'schedule'
+        continue-on-error: true
+        run: python scripts/send_alert.py "Daily digest"

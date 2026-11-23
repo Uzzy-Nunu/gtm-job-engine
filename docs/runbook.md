@@ -97,6 +97,14 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **HubSpot key permission:** the Service Key needs the `files` scope to upload. If a run says `required scopes`, add the scope it names (Development > Keys > Service keys > your key > Edit scopes) and run again.
 - **Before applying:** open the CV, copy all, paste into Notepad: it should read cleanly, top to bottom. Check it's no more than 2 pages in Word. You send everything yourself; nothing is applied or sent automatically.
 
+## Email: daily digest and alerts (Milestone 6)
+- **Daily digest** (about 07:27 Lagos, workflow **Daily digest**): deals Ready for Review (fit score, coverage, link), follow-ups due (Applied with no update for `digest.follow_up_days`, default 5), deals that need you (anything in Pipeline Error, except Archived and Rejected), scheduled runs that failed in the last 24 hours, and counts per stage. It only reads HubSpot.
+- **Alerts:** if a scheduled Import jobs, Process captures or Daily digest run fails, you get an email with a link to the run. GitHub also emails failed scheduled runs to you by default.
+- **Sending:** through Gmail with an app password (it can send, not read your mail). Secrets: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, and optionally `DIGEST_TO_EMAIL` (defaults to the Gmail address).
+- **Turning on the daily schedule:** repository variable `ENABLE_DIGEST` = `true`. Delete it to pause.
+- **By hand:** Actions > **Daily digest** > Run workflow (`send` emails it now; `preview` shows counts only). Locally: `python scripts/send_digest.py --offline` (made-up deals), `--preview` (saves `output/digest-preview.html`), or no flag to send.
+- **Changing the app password:** create a new one in your Google Account (Security > App passwords), update `GMAIL_APP_PASSWORD`, and delete the old one in Google.
+
 ## Adding job titles
 All title lists are in `config.yaml`. Edit them on github.com: open the file, click the pencil icon, change it, then **Commit changes**.
 
@@ -144,4 +152,7 @@ The boards already reviewed, with their verdicts, are in [job-boards.md](job-boa
 Listed in [PRD §16](PRD.md#16-configuration-and-secrets). Stored only in GitHub Secrets and Cloudflare secrets. Never paste them into code, chat or issues.
 
 ## Troubleshooting
-_Filled in at M6._
+- **A failed-run email arrived:** open the link, click the red step and read its last lines. Busy AI (Gemini 503/429) needs nothing: the deals wait for the next run. A HubSpot `required scopes` message means the Service Key needs that scope added (Development > Keys > Service keys > GTM Job Engine > Edit).
+- **No digest arrived:** check the Daily digest run on GitHub. "Gmail refused the login" means the app password is wrong or was deleted: make a new one and update `GMAIL_APP_PASSWORD`. Also check your spam folder once and mark it Not spam.
+- **A deal is stuck:** look at its Pipeline Error field, fix the cause, then clear the field. It's picked up on the next run.
+- **Schedules stopped:** GitHub pauses schedules on public repos after 60 days with no commits. Any commit (even a docs edit) restarts them.

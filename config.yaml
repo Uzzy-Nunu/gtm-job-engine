@@ -145,6 +145,11 @@ llm:
   min_seconds_between_calls: 4      # keeps well inside free-tier per-minute limits
   max_ai_calls_per_run: 40          # leftover jobs wait for the next run
 
+# --- Daily digest and alerts (PRD §10.6, §10.7) ----------------------
+# Sent by Gmail to DIGEST_TO_EMAIL (GitHub Secrets). See docs/runbook.md > Email.
+digest:
+  follow_up_days: 5           # Applied deals with no update for this long are listed as follow-ups due
+
 # --- HubSpot (PRD §9) ------------------------------------------------
 hubspot:
   # Free CRM allows 10 custom properties in total. Raise on a paid plan.

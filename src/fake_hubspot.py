@@ -69,6 +69,8 @@ class FakeHubSpot:
         self.calls.append(("GET", path))
         if path == "/crm/v3/pipelines/deals":
             return {"results": [copy.deepcopy(self.pipeline)]}
+        if path == "/account-info/v3/details":
+            return {"portalId": 123456, "uiDomain": "app.hubspot.com", "timeZone": "Africa/Lagos"}
         parts = path.strip("/").split("/")
         if parts[:3] == ["crm", "v4", "objects"] and len(parts) == 7 and parts[5] == "associations":
             # GET /crm/v4/objects/{from}/{id}/associations/{to}

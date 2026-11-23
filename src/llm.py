@@ -87,6 +87,8 @@ class BaseProvider:
         self.calls = 0                         # requests sent, including retries
         self.busy_retries = 0                  # retries after "busy / rate limited" replies
         self.format_problems: list[str] = []  # short, content-free reasons answers were retried
+        self.backup_uses = 0                   # answers that came from a backup model
+        self._busy_models: set[str] = set()    # models that stayed busy this run: go straight to backup
 
     # --- public ---------------------------------------------------------
     def generate_json(self, *, system: str, prompt: str, schema: dict, role: str = "fast") -> dict:
@@ -97,7 +99,7 @@ class BaseProvider:
         for attempt in range(2):  # one retry for an invalid answer (PRD §11.2)
             note = "" if problem is None else (
                 f"\n\nYour previous answer was invalid ({problem}). Return only JSON matching the schema.")
-            raw = self._call_with_retries(model, system, prompt + note, schema)
+            raw = self._call_with_backup(role, model, system, prompt + note, schema)
             try:
                 data = _parse_json(raw)
                 jsonschema.validate(data, schema)
@@ -115,16 +117,34 @@ class BaseProvider:
                 self._sleep(gap)
         self._last = self._clock()
 
-    def _call_with_retries(self, model, system, prompt, schema) -> str:
+    def _call_with_backup(self, role, model, system, prompt, schema) -> str:
+        """Use the role's backup model (e.g. draft_backup) if the main one stays busy.
+        Once a model has stayed busy, later requests in the same run go straight to the backup."""
+        backup = self.models.get(f"{role}_backup")
+        if not backup or backup == model:
+            return self._call_with_retries(model, system, prompt, schema)
+        if model not in self._busy_models:
+            try:
+                return self._call_with_retries(model, system, prompt, schema)
+            except LLMError as e:
+                if not e.retryable:
+                    raise
+                self._busy_models.add(model)
+        raw = self._call_with_retries(backup, system, prompt, schema, retries=1)
+        self.backup_uses += 1
+        return raw
+
+    def _call_with_retries(self, model, system, prompt, schema, retries=None) -> str:
         last = None
-        for attempt in range(self.max_retries + 1):
+        retries = self.max_retries if retries is None else retries
+        for attempt in range(retries + 1):
             self._pace()
             self.calls += 1
             try:
                 return self._call(model, system, prompt, schema)
             except LLMError as e:
                 last = e
-                if not e.retryable or attempt == self.max_retries:
+                if not e.retryable or attempt == retries:
                     raise
                 self.busy_retries += 1
                 wait = getattr(e, "wait", None) or self.backoff * (2 ** attempt)
@@ -239,7 +259,8 @@ def make_llm(config: dict, api_key: str | None = None):
     """Build the provider named in config.yaml (llm.provider)."""
     llm = config.get("llm") or {}
     provider = (llm.get("provider") or "gemini").lower()
-    models = {"fast": llm.get("fast_model"), "draft": llm.get("draft_model")}
+    models = {"fast": llm.get("fast_model"), "draft": llm.get("draft_model"),
+              "draft_backup": llm.get("draft_backup_model")}
     kw = {"max_retries": int(llm.get("max_retries", 3)),
           "backoff": float(llm.get("retry_backoff_seconds", 20)),
           "min_interval": float(llm.get("min_seconds_between_calls", 4))}

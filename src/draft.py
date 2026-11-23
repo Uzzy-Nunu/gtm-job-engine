@@ -115,6 +115,7 @@ class DraftReport:
     stopped: str | None = None
     ai_calls: int = 0
     busy_retries: int = 0
+    backup_uses: int = 0
 
     @property
     def ok(self) -> bool:
@@ -126,6 +127,8 @@ class DraftReport:
         out = [f"Drafted: {len(self.drafts)} | truth-check flags: {flagged} | skipped: {len(self.skipped)} | "
                f"errors: {len(self.errors)} | AI requests: {self.ai_calls} (busy retries: {self.busy_retries}) | "
                f"room today: {self.room} | left for later: {self.waiting}"]
+        if self.backup_uses:
+            out.append(f"Backup AI model used for {self.backup_uses} answer(s): the main draft model was busy.")
         if self.stopped:
             out.append(f"! Stopped early: {self.stopped}")
         for d in self.drafts:
@@ -219,10 +222,14 @@ class Drafter:
                   .replace("{analysis}", redact(props.get("job_analysis") or "")[:MAX_ANALYSIS])
                   .replace("{cv_pieces}", for_ai(self.master))
                   .replace("{evidence}", redact(self.master.evidence)[:3000]))
+        backups_before = getattr(self.llm, "backup_uses", 0)
         picks = self.llm.generate_json(system=self.draft_system, prompt=prompt, schema=DRAFT_SCHEMA, role="draft")
 
         assembled = assemble(self.master, picks)
         problems = list(assembled.problems)
+        if getattr(self.llm, "backup_uses", 0) > backups_before:
+            problems.append("Written by the backup AI model (the main draft model was busy): "
+                            "check the wording reads well.")
         cv = fit_two_pages(assembled.cv, problems)
         letter_raw = picks["cover_letter"]
         words = sum(len(p.split()) for p in letter_raw["paragraphs"])
@@ -356,6 +363,7 @@ class Drafter:
                 report.errors.append((deal["id"], name, str(e)[:120]))
         report.ai_calls = self.llm.calls
         report.busy_retries = getattr(self.llm, "busy_retries", 0)
+        report.backup_uses = getattr(self.llm, "backup_uses", 0)
         return report
 
     def _flag(self, deal_id: str, message: str):

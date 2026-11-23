@@ -475,6 +475,7 @@ llm:
   provider: gemini        # or claude
   fast_model: gemini-3.5-flash-lite
   draft_model: gemini-3.8-flash
+  draft_backup_model: gemini-3.5-flash-lite   # used when the draft model stays busy
 companies:
   greenhouse: []          # board tokens
   lever: []

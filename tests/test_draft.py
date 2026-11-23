@@ -242,3 +242,23 @@ def test_preview_writes_nothing_to_hubspot(tmp_path):
     assert hs.files == {} and hs.all("notes") == []
     assert not any(m in ("PATCH", "UPLOAD") or (m == "POST" and not p.endswith("/search"))
                    for m, p in hs.calls[before:])
+
+
+def test_draft_written_by_backup_model_is_noted(tmp_path):
+    class BusyDraft(FakeProvider):
+        def _call(self, model, system, prompt, schema):
+            if model == "fake-draft":
+                raise LLMError("Gemini 503: busy or rate-limited", retryable=True)
+            return super()._call(model, system, prompt, schema)
+
+    def answer(system, prompt, schema):
+        return NO_ISSUES if "fact-checker" in system else DRAFT
+
+    llm = BusyDraft(answer, models={"fast": "fake-fast", "draft": "fake-draft", "draft_backup": "fake-fast"},
+                    max_retries=1, sleep=lambda s: None)
+    hs = FakeHubSpot()
+    seed(hs)
+    report = drafter(hs, llm, tmp_path=tmp_path).run()
+    assert report.ok and len(report.drafts) == 1 and report.backup_uses == 1
+    assert any("backup AI model" in p for p in report.drafts[0].problems)
+    assert any("Backup AI model used for 1 answer(s)" in line for line in report.lines())

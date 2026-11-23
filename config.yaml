@@ -137,7 +137,9 @@ llm:
   provider: gemini                  # gemini | claude (key in the LLM_API_KEY secret)
   fast_model: gemini-3.5-flash-lite # reading and scoring jobs (stable, checked 17 Nov 2026)
   draft_model: gemini-3.8-flash     # CVs, cover letters, messages (M5)
-  # For Claude: provider: claude, fast_model: claude-haiku-5-5, draft_model: claude-sonnet-5-5
+  draft_backup_model: gemini-3.5-flash-lite  # used when the draft model stays busy (Gemini 503/429)
+  # For Claude: provider: claude, fast_model: claude-haiku-5-5, draft_model: claude-sonnet-5-5,
+  #   draft_backup_model: claude-haiku-5-5
   max_retries: 3
   retry_backoff_seconds: 20
   min_seconds_between_calls: 4      # keeps well inside free-tier per-minute limits

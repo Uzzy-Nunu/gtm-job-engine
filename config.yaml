@@ -69,6 +69,31 @@ explore_titles:
   - Customer Success        # CS Manager / Specialist / Operations (CX background)
   - CX Operations
   - Customer Experience Operations
+  # Added 24 Nov 2026 after checking 79 company boards (Peace's choice)
+  - AI Growth               # AI Growth Engineer / Lead
+  - Head of Growth
+  - Director of Growth
+  - Growth Director
+  - Product-Led Growth
+  - GTM Enablement
+  - Go-to-Market Enablement
+  - GTM Strategy
+  - Go-to-Market Strategy
+  - GTM Strategic Planning
+  - Revenue Enablement
+  - Sales Enablement
+  - Sales Operations
+  - Sales Ops
+  - Lifecycle Marketing
+  - Performance Marketing
+  - Performance Marketer
+  - Product Marketing
+  - Partner Marketing
+  - Field Marketing
+  - Solutions Engineer
+  - Solutions Consultant
+  - Solutions Manager
+  - Implementation Consultant
 
 # Titles that mean "clearly not a match" (hard filter, PRD §10.2 QU-2).
 # These win over every list above.
@@ -160,10 +185,92 @@ hubspot:
 #   https://boards.greenhouse.io/<token>  ->  greenhouse: [<token>]
 #   https://jobs.lever.co/<token>         ->  lever: [<token>]
 #   https://jobs.ashbyhq.com/<token>      ->  ashby: [<token>]
+# Target companies (24 Nov 2026): remote-first or globally hiring companies in SaaS, AI,
+# GTM tooling, fintech and African tech, each with a live board checked by
+# scripts/check_company_boards.py. Re-check before adding more; see docs/target-companies.md.
 companies:
-  greenhouse: []
-  lever: []
-  ashby: []
+  greenhouse:
+    - {token: canonical, name: "Canonical", website: https://canonical.com}
+    - {token: gitlab, name: "GitLab", website: https://gitlab.com}
+    - {token: automatticcareers, name: "Automattic", website: https://automattic.com}
+    - {token: wikimedia, name: "Wikimedia Foundation", website: https://wikimediafoundation.org}
+    - {token: moniepoint, name: "Moniepoint", website: https://moniepoint.com}
+    - {token: alxafrica, name: "ALX Africa", website: https://alxafrica.com}
+    - {token: fingerprint, name: "Fingerprint", website: https://fingerprint.com}
+    - {token: netlify, name: "Netlify", website: https://netlify.com}
+    - {token: storyblok, name: "Storyblok", website: https://storyblok.com}
+    - {token: amplemarket, name: "Amplemarket", website: https://amplemarket.com}
+    - {token: remotecom, name: "Remote", website: https://remote.com}
+    - {token: doitintl, name: "DoiT", website: https://doit.com}
+    - {token: customerio, name: "Customer.io", website: https://customer.io}
+    - {token: seranking, name: "SE Ranking", website: https://seranking.com}
+    - {token: mozilla, name: "Mozilla", website: https://mozilla.org}
+    - {token: okx, name: "OKX", website: https://okx.com}
+    - {token: bybit, name: "Bybit", website: https://bybit.com}
+    - {token: consensys, name: "Consensys", website: https://consensys.io}
+    - {token: openzeppelin, name: "OpenZeppelin", website: https://openzeppelin.com}
+    - {token: platformsh, name: "Upsun", website: https://upsun.com}
+    - {token: planetscale, name: "PlanetScale", website: https://planetscale.com}
+    - {token: bitwarden, name: "Bitwarden", website: https://bitwarden.com}
+    - {token: invisible, name: "Invisible Technologies", website: https://invisible.co}
+    - {token: toloka, name: "Toloka", website: https://toloka.ai}
+    - {token: udacity, name: "Udacity", website: https://udacity.com}
+    - {token: heygen, name: "HeyGen", website: https://heygen.com}
+    - {token: chainguard, name: "Chainguard", website: https://chainguard.dev}
+    - {token: apolloio, name: "Apollo.io", website: https://apollo.io}
+    - {token: zoominfo, name: "ZoomInfo", website: https://zoominfo.com}
+    - {token: pendo, name: "Pendo", website: https://pendo.io}
+    - {token: postscript, name: "Postscript", website: https://postscript.io}
+    - {token: fivetran, name: "Fivetran", website: https://fivetran.com}
+    - {token: luno, name: "Luno", website: https://luno.com}
+    - {token: jumia, name: "Jumia", website: https://group.jumia.com}
+    - {token: flyzipline, name: "Zipline", website: https://flyzipline.com}
+    - {token: offerzen, name: "OfferZen", website: https://offerzen.com}
+    - {token: transfergo, name: "TransferGo", website: https://transfergo.com}
+    - {token: thunes, name: "Thunes", website: https://thunes.com}
+  lever:
+    - {token: contentsquare, name: "Contentsquare", website: https://contentsquare.com}
+    - {token: toptal, name: "Toptal", website: https://toptal.com}
+    - {token: metabase, name: "Metabase", website: https://metabase.com}
+    - {token: offchainlabs, name: "Offchain Labs", website: https://offchainlabs.com}
+    - {token: superside, name: "Superside", website: https://superside.com}
+    - {token: moonpay, name: "MoonPay", website: https://moonpay.com}
+    - {token: 90seconds, name: "90 Seconds", website: https://90seconds.com}
+    - {token: brevo, name: "Brevo", website: https://brevo.com}
+    - {token: outreach, name: "Outreach", website: https://outreach.io}
+  ashby:
+    - {token: claylabs, name: "Clay", website: https://clay.com}
+    - {token: lemlist, name: "lemlist", website: https://lemlist.com}
+    - {token: n8n, name: "n8n", website: https://n8n.io}
+    - {token: zapier, name: "Zapier", website: https://zapier.com}
+    - {token: posthog, name: "PostHog", website: https://posthog.com}
+    - {token: supabase, name: "Supabase", website: https://supabase.com}
+    - {token: oyster, name: "Oyster", website: https://oysterhr.com}
+    - {token: circle, name: "Circle", website: https://circle.so}
+    - {token: kit, name: "Kit", website: https://kit.com}
+    - {token: chilipiper, name: "Chili Piper", website: https://chilipiper.com}
+    - {token: elevenlabs, name: "ElevenLabs", website: https://elevenlabs.io}
+    - {token: linear, name: "Linear", website: https://linear.app}
+    - {token: revenuecat, name: "RevenueCat", website: https://revenuecat.com}
+    - {token: andela, name: "Andela", website: https://andela.com}
+    - {token: m-kopa, name: "M-KOPA", website: https://m-kopa.com}
+    - {token: lemfi, name: "LemFi", website: https://lemfi.com}
+    - {token: helpscout, name: "Help Scout", website: https://helpscout.com}
+    - {token: buffer, name: "Buffer", website: https://buffer.com}
+    - {token: railway, name: "Railway", website: https://railway.com}
+    - {token: prefect, name: "Prefect", website: https://prefect.io}
+    - {token: gitbook, name: "GitBook", website: https://gitbook.com}
+    - {token: wistia, name: "Wistia", website: https://wistia.com}
+    - {token: percona, name: "Percona", website: https://percona.com}
+    - {token: restream, name: "Restream", website: https://restream.io}
+    - {token: everai, name: "EverAI", website: https://everai.ai}
+    - {token: sardine, name: "Sardine", website: https://sardine.ai}
+    - {token: deepgram, name: "Deepgram", website: https://deepgram.com}
+    - {token: searchapi, name: "SearchApi", website: https://searchapi.io}
+    - {token: testgorilla, name: "TestGorilla", website: https://testgorilla.com}
+    - {token: gorgias, name: "Gorgias", website: https://gorgias.com}
+    - {token: cohere, name: "Cohere", website: https://cohere.com}
+    - {token: kestra, name: "Kestra", website: https://kestra.io}
 
 # Each entry is a board token, or {token, name, website} when the board
 # doesn't give the company name or website.
@@ -180,8 +287,10 @@ public_feeds:
 
 import:
   max_job_age_days: 14      # ignore postings older than this
+  company_board_max_age_days: 60  # Greenhouse/Lever/Ashby boards list only open roles, so allow older ones
   himalayas_pages: 1        # per search, 20 jobs per page (results are sorted by relevance)
-  himalayas_queries:        # one search each, plus every explore title; keep short (rate limit)
+  himalayas_search_explore: false   # true = also one search per explore title (too many now: rate limit)
+  himalayas_queries:        # one search each; keep short (rate limit)
     - GTM Engineer
     - Growth Engineer
     - Marketing Automation
@@ -195,6 +304,13 @@ import:
     - AI Implementation
     - GTM Strategist
     - Chief of Staff
+    - Head of Growth
+    - Lifecycle Marketing
+    - Product Marketing
+    - Solutions Engineer
+    - GTM Enablement
+    - HubSpot
+    - Customer Success
   jobicy_geos: [anywhere, emea]   # Jobicy region codes Peace can work in
   jobicy_pages: 3                 # 100 jobs per page
   wwr_feeds:                # We Work Remotely RSS categories

@@ -133,6 +133,9 @@ explore_titles:
 - After a week or two, move titles that bring good roles up to `adjacent_titles` and delete ones that don't.
 - Each explore title is also searched on Himalayas, so keep the list to about 5.
 
+## Target companies
+The companies whose own job boards are read each run are listed in [target-companies.md](target-companies.md), with how they were chosen and how to check new ones (`scripts/check_company_boards.py`). Company boards keep roles up to 60 days old (`import.company_board_max_age_days`), because a company's board lists only open roles.
+
 ## Adding a new job board
 The boards already reviewed, with their verdicts, are in [job-boards.md](job-boards.md).
 

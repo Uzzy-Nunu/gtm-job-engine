@@ -564,7 +564,7 @@ timezone: "Africa/Lagos"
 1. ~~Production AI provider~~ **Decided:** free Gemini tier in Phase 1. Paid Gemini or Claude to be chosen at Phase 2.
 2. ~~Digest email sending method~~ **Decided (23 Nov 2026):** Gmail SMTP with an app password (`GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`). Send-only; no inbox access.
 3. ~~HubSpot free-plan custom property limits~~ **Decided:** 10 in total. See §9.2.
-4. The list of target companies' job boards (started in M0, finalised and verified in M3 when the source modules are built).
+4. The list of target companies' job boards (started in M0, finalised and verified in M3 when the source modules are built). **Done 24 Nov 2026:** 79 companies with live Greenhouse, Lever or Ashby boards, chosen for fit (remote-first or globally hiring SaaS, AI, GTM tooling, fintech, African tech) and hiring signal (live open roles), checked with `scripts/check_company_boards.py`; see `docs/target-companies.md`. Company boards keep roles up to 60 days old. Explore titles grew by 24 (growth leadership, GTM enablement and strategy, sales ops, lifecycle/performance/product/partner/field marketing, solutions roles, AI growth); Himalayas searches no longer add one search per explore title (`himalayas_search_explore: false`).
 
 ---
 

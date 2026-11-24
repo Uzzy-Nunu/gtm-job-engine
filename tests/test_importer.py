@@ -109,8 +109,15 @@ def test_explore_titles_are_added_to_himalayas_searches():
                 seen.append(params["q"])
             return super().json(url, params)
 
-    run(config(explore_titles=["Lifecycle Marketing", "sample"]), http=RecordingHttp())
+    cfg = config(explore_titles=["Lifecycle Marketing", "sample"])
+    cfg["import"] = dict(cfg["import"], himalayas_queries=["sample"], himalayas_search_explore=True)
+    run(cfg, http=RecordingHttp())
     assert seen == ["sample", "Lifecycle Marketing"]   # no duplicate search for "sample"
+
+    seen.clear()
+    cfg["import"]["himalayas_search_explore"] = False
+    run(cfg, http=RecordingHttp())
+    assert seen == ["sample"]
 
 
 def test_rerun_same_day_creates_nothing_new():
@@ -215,3 +222,34 @@ def test_near_misses_list_remote_recent_jobs_skipped_only_for_title():
             job("GTM Engineer")], config(explore_titles=[]), report, now=now)
     assert report.kept == 1 and dict(report.near_misses) == {"Lifecycle Marketing Manager": 2}
     assert "  ? Lifecycle Marketing Manager (2)" in report.lines()
+
+
+def test_company_boards_allow_older_open_roles_and_checker_counts_matches():
+    from src.importer import ImportReport, select
+    from src.sources.base import JobPosting
+    now = datetime(2026, 11, 24, tzinfo=timezone.utc)
+    old = datetime(2026, 10, 20, tzinfo=timezone.utc)   # 35 days old
+    board = JobPosting(source="Greenhouse", url="https://example.com/gh/1", title="GTM Engineer",
+                       company="Demo", location="Remote - EMEA", posted_at=old)
+    feed = JobPosting(source="RemoteOK", url="https://example.com/rok/1", title="GTM Engineer",
+                      company="Demo", location="Worldwide", posted_at=old)
+    report = ImportReport()
+    kept = select([board, feed], config(), report, now=now)
+    assert [j.source for _, j in kept] == ["Greenhouse"] and report.skipped["too old"] == 1
+
+    from scripts import check_company_boards as checker
+    assert checker.parse_candidates("# note\nDemo | greenhouse | demo\nNo board | other | -\n") == [
+        ("Demo", "greenhouse", "demo")]
+
+    class FakeHttp:
+        def json(self, url, params=None):
+            if "greenhouse" in url:
+                raise checker.SourceError("404")
+            return [{"text": "Revenue Operations Manager", "hostedUrl": "https://example.com/l/1",
+                     "categories": {"location": "Remote - Worldwide", "commitment": "Full-time"},
+                     "createdAt": int(now.timestamp() * 1000), "descriptionPlain": "x"},
+                    {"text": "Office Manager", "hostedUrl": "https://example.com/l/2",
+                     "categories": {"location": "Remote"}, "createdAt": int(now.timestamp() * 1000)}]
+
+    r = checker.check(FakeHttp(), "Demo", "any", "demo", config(), now)
+    assert (r.kind, r.total, r.remote_recent, r.matching) == ("lever", 2, 2, 1)

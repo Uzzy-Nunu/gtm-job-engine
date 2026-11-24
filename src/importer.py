@@ -84,7 +84,8 @@ def collect(config: dict, http, report: ImportReport) -> list[JobPosting]:
     if feeds.get("himalayas"):
         queries = list(opts.get("himalayas_queries") or (
             list(config.get("target_titles") or []) + list(config.get("adjacent_titles") or [])))
-        for title in config.get("explore_titles") or []:
+        explore = (config.get("explore_titles") or []) if opts.get("himalayas_search_explore", True) else []
+        for title in explore:
             if title.lower() not in {q.lower() for q in queries}:
                 queries.append(title)
         readers.append(("Himalayas", lambda: remote_boards.himalayas(
@@ -113,6 +114,7 @@ def collect(config: dict, http, report: ImportReport) -> list[JobPosting]:
 
 RANK = {"target": 0, "adjacent": 1, "explore": 2}
 NEAR_MISS_SHOWN = 40
+COMPANY_BOARD_SOURCES = ("Greenhouse", "Lever", "Ashby")
 
 
 def select(jobs: list[JobPosting], config: dict, report: ImportReport,
@@ -121,20 +123,23 @@ def select(jobs: list[JobPosting], config: dict, report: ImportReport,
     titles = TitleFilter.from_config(config)
     eligible = config.get("eligible_regions") or []
     max_age = int((config.get("import") or {}).get("max_job_age_days", 14))
+    # A company's own board lists only open roles, so older postings are still live.
+    board_age = int((config.get("import") or {}).get("company_board_max_age_days", 60))
     seen: set[str] = set()
     ranked = []
     for job in jobs:
+        age = board_age if job.source in COMPANY_BOARD_SOURCES else max_age
         rank = titles.match(job.title)
         if not rank:
             report.skipped["title"] += 1
             if (looks_remote(job.location, job.workplace_type) and region_ok(job.location, eligible)
-                    and is_recent(job.posted_at, max_age, now)):
+                    and is_recent(job.posted_at, age, now)):
                 report.near_misses[" ".join((job.title or "").split())[:80]] += 1
             continue
         if not looks_remote(job.location, job.workplace_type) or not region_ok(job.location, eligible):
             report.skipped["location"] += 1
             continue
-        if not is_recent(job.posted_at, max_age, now):
+        if not is_recent(job.posted_at, age, now):
             report.skipped["too old"] += 1
             continue
         try:

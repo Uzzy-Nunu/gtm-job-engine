@@ -200,3 +200,18 @@ def test_html_to_text_skips_scripts_and_styles():
     assert "SampleCorp" in text and "We sell CRM tools." in text
     for junk in ("color:red", "tracking", "enable js"):
         assert junk not in text
+
+
+def test_near_misses_list_remote_recent_jobs_skipped_only_for_title():
+    from src.importer import ImportReport, select
+    from src.sources.base import JobPosting
+    now = datetime(2026, 11, 24, tzinfo=timezone.utc)
+    job = lambda title, loc="Remote", age=1: JobPosting(  # noqa: E731
+        source="Other", url=f"https://example.com/{title}-{loc}-{age}".replace(" ", "-"), title=title,
+        company="Demo", location=loc, posted_at=now.replace(day=24 - age))
+    report = ImportReport()
+    select([job("Lifecycle Marketing Manager"), job("Lifecycle Marketing Manager", age=2),
+            job("Account Executive", loc="Remote - US only"), job("Office Manager", age=20),
+            job("GTM Engineer")], config(explore_titles=[]), report, now=now)
+    assert report.kept == 1 and dict(report.near_misses) == {"Lifecycle Marketing Manager": 2}
+    assert "  ? Lifecycle Marketing Manager (2)" in report.lines()

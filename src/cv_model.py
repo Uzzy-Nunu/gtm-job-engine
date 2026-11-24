@@ -292,6 +292,26 @@ def for_ai(cv: MasterCV) -> str:
     return redact(view)  # second safety net: no emails, phones or profile links
 
 
+def experience_overview(cv: MasterCV) -> str:
+    """What the Qualify step needs to judge seniority and real experience:
+    role titles with dates, their usable bullets, projects and certifications.
+    Employer names are left out (not needed to score fit). Redacted."""
+    out = ["PROFESSIONAL EXPERIENCE (newest first; employer names left out):"]
+    for r in cv.roles:
+        out.append(f"- {r.title} ({r.dates})")
+        out += [f"    - {b.text}" for b in r.bullets if b.usable]
+    if cv.projects:
+        out.append("\nPROJECTS:")
+        for p in cv.projects:
+            out.append(f"- {p.name}")
+            out += [f"    - {b.text}" for b in p.bullets if b.usable]
+    if cv.certifications:
+        out.append("\nCERTIFICATIONS:")
+        out += [f"- {c.text}" for c in cv.certifications]
+    view = WEB_ADDRESS.sub("[link removed]", "\n".join(out))
+    return redact(view)
+
+
 # --- turning AI picks into a checked CV ----------------------------------------------
 
 def _norm(text: str) -> str:

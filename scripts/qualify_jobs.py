@@ -59,6 +59,8 @@ def main(argv=None) -> int:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--offline", action="store_true", help="made-up jobs, fake AI and HubSpot")
     mode.add_argument("--preview", action="store_true", help="real data and AI, but write nothing")
+    parser.add_argument("--rescore-archived", action="store_true",
+                        help="re-score Archived deals that were archived for a low fit score")
     args = parser.parse_args(argv)
 
     config = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
@@ -73,8 +75,11 @@ def main(argv=None) -> int:
         label = "PREVIEW (real data and AI, nothing written)" if args.preview else "LIVE (updates HubSpot)"
         write = not args.preview
 
+    if args.rescore_archived:
+        label += " | RE-SCORING low-score Archived deals"
     print(f"== Qualify jobs: {label}")
-    report = Qualifier(hs, llm, config, profile, http=Http(), write=write).run(max_ai_calls=max_calls)
+    report = Qualifier(hs, llm, config, profile, http=Http(), write=write,
+                       rescore_archived=args.rescore_archived).run(max_ai_calls=max_calls)
     lines = report.lines()
     print("\n".join(lines))
 

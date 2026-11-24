@@ -85,6 +85,11 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Tuning:** `fit_threshold` and `rubric` points in `config.yaml`; the prompt in `prompts/qualify.md`.
 - **Free-tier quota:** at most `max_ai_calls_per_run` jobs per run, one request each. If the AI is busy, the run stops cleanly and the rest wait for the next run.
 
+### Why jobs get archived, and re-scoring
+- **Archive report** (Actions > Archive report > Run workflow): counts why jobs were archived (not remote, region, excluded title, low score), where low-score jobs lost points, and lists each job title with its score and reason. Read-only.
+- **Re-score** after a scoring change: Actions > Qualify, research and draft jobs > Run workflow, tick **rescore**, choose `preview` first to see the new scores, then `live` to move jobs that now pass to Qualified. Only jobs archived for a low score are re-scored.
+- **Near-miss titles:** each Import jobs summary ends with "Remote and recent, skipped only for the title": remote, eligible, recent jobs that no title list matched. Titles that fit you there belong in `adjacent_titles` or `explore_titles`.
+
 ## Drafting applications (Milestone 5)
 - **What it makes** for each **Researched** deal (highest Fit Score first, up to `daily_draft_cap` a day): a tailored CV and a cover letter (Word files), a LinkedIn connection note (300 characters max), a follow-up message (120 words max) and a keyword coverage check.
 - **Where it goes (live):** both files are uploaded to HubSpot's file manager as **private** files (folder `gtm-job-engine/drafts`) and attached to a note on the deal. The deal's **Job Analysis** gets a `Drafts (date)` section with the truth-check result, coverage, missing keywords and both messages; **Keyword Coverage** is filled in; the deal moves to **Ready for Review**. Re-drafting replaces the old `Drafts` section.

@@ -244,3 +244,25 @@ def test_board_imports_still_use_the_threshold():
     deal_id = seed(hs, "s6", job_source="Himalayas", job_url="https://himalayas.app/x/s6")
     qualifier(hs).run()
     assert hs.stage_label(hs.objects["deals"][deal_id]["properties"]["dealstage"]) == "Archived"
+
+
+# --- re-scoring low-score archived deals -------------------------------------------
+
+def test_rescore_touches_only_low_score_archived_deals():
+    hs = FakeHubSpot()
+    archived = next(s["id"] for s in hs.pipeline["stages"] if s["label"] == "Archived")
+    low = seed(hs, "s1", dealstage=archived, job_url="https://example.com/jobs/low",
+               job_analysis="Fit score: 54/100 (threshold 70) -> Archived\nReason: Fit score 54 is below the threshold of 70.")
+    hard = seed(hs, "s1", dealstage=archived, job_url="https://example.com/jobs/hard",
+                job_analysis="Fit score: 0/100 (threshold 70) -> Archived\nReason: Not remote (on-site or hybrid).")
+    by_hand = seed(hs, "s1", dealstage=archived, job_url="https://example.com/jobs/hand")
+    new = seed(hs, "s1", job_url="https://example.com/jobs/new")
+
+    preview = qualifier(hs, write=False, rescore_archived=True).run()
+    assert [o.deal_id for o in preview.outcomes] == [low]
+    assert hs.stage_label(hs.objects["deals"][low]["properties"]["dealstage"]) == "Archived"
+
+    qualifier(hs, rescore_archived=True).run()
+    stage = lambda d: hs.stage_label(hs.objects["deals"][d]["properties"]["dealstage"])  # noqa: E731
+    assert stage(low) == "Qualified"          # sample s1 scores 96 with today's rubric
+    assert stage(hard) == stage(by_hand) == "Archived" and stage(new) == "New"

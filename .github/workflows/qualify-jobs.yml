@@ -4,6 +4,8 @@ name: Qualify, research and draft jobs
 # "preview" reads your deals and asks the AI, but writes nothing to HubSpot.
 # "live" qualifies New deals, researches Qualified ones, then drafts the CV,
 # cover letter and messages for Researched ones and moves them to Ready for Review.
+# Tick "rescore" to re-score jobs that were archived for a low fit score (for
+# example after a scoring change); hard-filtered and hand-archived jobs are left alone.
 on:
   workflow_dispatch:
     inputs:
@@ -12,6 +14,10 @@ on:
         type: choice
         options: [preview, live]
         default: preview
+      rescore:
+        description: "Re-score jobs archived for a low fit score (after scoring changes)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,6 +35,7 @@ jobs:
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       MASTER_CV: ${{ secrets.MASTER_CV }}
       MODE_FLAG: ${{ inputs.mode == 'live' && ' ' || '--preview' }}
+      RESCORE_FLAG: ${{ inputs.rescore && '--rescore-archived' || ' ' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -37,7 +44,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Qualify jobs (${{ inputs.mode }})
-        run: python scripts/qualify_jobs.py $MODE_FLAG
+        run: python scripts/qualify_jobs.py $MODE_FLAG $RESCORE_FLAG
       - name: Research jobs (${{ inputs.mode }})
         if: always()
         run: python scripts/research_jobs.py $MODE_FLAG

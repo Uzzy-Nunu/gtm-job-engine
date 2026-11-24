@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, time, timezone
 from zoneinfo import ZoneInfo
@@ -40,6 +41,9 @@ class ImportReport:
     already_today: int = 0
     matched_by_list: dict[str, int] = field(default_factory=lambda: {"target": 0, "adjacent": 0, "explore": 0})
     created_by_list: dict[str, int] = field(default_factory=lambda: {"target": 0, "adjacent": 0, "explore": 0})
+    # Remote, eligible, recent jobs skipped only because the title isn't on a list:
+    # the place to look for titles worth adding.
+    near_misses: Counter = field(default_factory=Counter)
 
     @property
     def ok(self) -> bool:
@@ -56,6 +60,11 @@ class ImportReport:
                    f"updated: {self.updated} | left for tomorrow (cap): {self.not_imported_cap}")
         out += [f"  + {name}" for name in self.created]
         out += [f"  ! {err}" for err in self.errors]
+        if self.near_misses:
+            out.append(f"Remote and recent, skipped only for the title ({sum(self.near_misses.values())}); "
+                       "most common:")
+            out += [f"  ? {title} ({n})" if n > 1 else f"  ? {title}"
+                    for title, n in self.near_misses.most_common(NEAR_MISS_SHOWN)]
         return out
 
 
@@ -103,6 +112,7 @@ def collect(config: dict, http, report: ImportReport) -> list[JobPosting]:
 
 
 RANK = {"target": 0, "adjacent": 1, "explore": 2}
+NEAR_MISS_SHOWN = 40
 
 
 def select(jobs: list[JobPosting], config: dict, report: ImportReport,
@@ -117,6 +127,9 @@ def select(jobs: list[JobPosting], config: dict, report: ImportReport,
         rank = titles.match(job.title)
         if not rank:
             report.skipped["title"] += 1
+            if (looks_remote(job.location, job.workplace_type) and region_ok(job.location, eligible)
+                    and is_recent(job.posted_at, max_age, now)):
+                report.near_misses[" ".join((job.title or "").split())[:80]] += 1
             continue
         if not looks_remote(job.location, job.workplace_type) or not region_ok(job.location, eligible):
             report.skipped["location"] += 1

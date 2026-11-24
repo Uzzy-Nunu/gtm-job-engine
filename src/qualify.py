@@ -130,8 +130,10 @@ def public_name(name: str, deal_id: str) -> str:
 
 class Qualifier:
     def __init__(self, hubspot, llm, config: dict, profile: str, http=None,
-                 write: bool = True, today: date | None = None, robots_ok=None):
+                 write: bool = True, today: date | None = None, robots_ok=None,
+                 rescore_archived: bool = False):
         self.hs = hubspot
+        self.rescore_archived = rescore_archived   # re-score low-score Archived deals instead of New ones
         self.llm = llm
         self.config = config
         self.profile = profile
@@ -166,6 +168,26 @@ class Qualifier:
         })
         return (found or {}).get("results", [])
 
+    def low_score_archived(self) -> list[dict]:
+        """Archived deals whose recorded reason is a low fit score (not a hard
+        filter and not archived by hand), for re-scoring after rubric or profile changes."""
+        out, after = [], None
+        while True:
+            body = {"filterGroups": [{"filters": [
+                        {"propertyName": "pipeline", "operator": "EQ", "value": self.pipeline_id},
+                        {"propertyName": "dealstage", "operator": "EQ", "value": self.stage["Archived"]}]}],
+                    "properties": ["dealname", "description", "apply_url", "job_url", "job_source",
+                                   "pipeline_error", "job_analysis"],
+                    "sorts": [{"propertyName": "createdate", "direction": "ASCENDING"}], "limit": 100}
+            if after:
+                body["after"] = after
+            page = self.hs.post("/crm/v3/objects/deals/search", body) or {}
+            out += [d for d in page.get("results", [])
+                    if "Reason: Fit score" in (d.get("properties", {}).get("job_analysis") or "")]
+            after = ((page.get("paging") or {}).get("next") or {}).get("after")
+            if not after:
+                return out
+
     def _update(self, deal_id: str, props: dict):
         if self.write:
             self.hs.patch(f"/crm/v3/objects/deals/{deal_id}", {"properties": props})
@@ -188,7 +210,7 @@ class Qualifier:
     def run(self, max_ai_calls: int = 40) -> QualifyReport:
         report = QualifyReport()
         self._resolve()
-        deals = self.new_deals()
+        deals = self.low_score_archived() if self.rescore_archived else self.new_deals()
         for i, deal in enumerate(deals):
             props = deal.get("properties", {})
             name = props.get("dealname") or deal["id"]

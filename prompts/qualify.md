@@ -19,11 +19,18 @@ Rules:
 - eligible_regions: the exact regions or countries the posting allows, as written, or null.
 - seniority: "Entry" (graduate, junior, 0-2 years), "Mid" (2-5 years, specialist, manager of no one),
   "Senior" (senior, staff, 5+ years), "Lead" (head of, director, VP, lead of a team), or "Unclear".
-- skills_overlap_points (0-20): how well the candidate's skills and tools cover the job's
-  key requirements. 18-20 = almost all covered, 12-17 = most, 6-11 = some, 0-5 = few.
-  Judge only from the candidate profile given; don't assume skills that aren't listed.
-- senior_requirements_met: true only if the role is Senior AND the candidate profile
-  clearly covers its requirements; otherwise false.
+- skills_overlap_points (0-20): how well the candidate covers the job's key requirements.
+  18-20 = almost all covered, 12-17 = most, 6-11 = some, 0-5 = few.
+  Use the whole profile: skills, tools, and the experience bullets, projects and
+  certifications. A requirement counts as covered when the profile shows the same
+  skill or a clearly equivalent one (e.g. one CRM for another, Make for Zapier,
+  one marketing-automation platform for another). Don't assume anything the
+  profile doesn't show. Nice-to-haves count far less than must-haves.
+- senior_requirements_met: true when the role is Senior AND the experience section
+  shows what it asks for: add up the years in relevant roles from the dates, and
+  check the scope (ownership, results, tools). Requirements like "5+ years in
+  marketing operations" are met by 5+ years across relevant roles, not only one
+  job with the same title. Otherwise false.
 - matched_skills: job requirements the candidate's profile clearly covers (short phrases).
 - missing_requirements: job requirements the profile does not show (short phrases). Be honest.
 - fit_reasons: 2-4 short, specific sentences on why this is or isn't a good fit.
@@ -32,7 +39,7 @@ Rules:
 ## USER
 Today's date: {today}
 
-CANDIDATE PROFILE (skills, tools and target titles only):
+CANDIDATE PROFILE (target titles, skills, tools and experience; no contact details):
 {profile}
 
 JOB POSTING:

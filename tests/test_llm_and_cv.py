@@ -153,8 +153,11 @@ def test_qualify_profile_has_skills_but_never_contact_details():
     profile = qualify_profile(SAMPLE_CV)
     for wanted in ("TARGET TITLES", "CORE SKILLS", "TOOLS & TECHNOLOGIES", "HubSpot", "Make"):
         assert wanted in profile
+    # Experience is included (titles, dates, bullets) so seniority can be judged,
+    # but never employer names or contact details (decision 24 Nov 2026).
+    assert "Growth Operations Lead" in profile and "lead-scoring model" in profile
     for private in ("alex.sample@example.com", "linkedin.com/in/alex-sample-example",
-                    "555-0199", "CONTACT", "Example Analytics", "PROFESSIONAL EXPERIENCE"):
+                    "555-0199", "CONTACT", "Example Analytics"):
         assert private not in profile
 
 

@@ -77,5 +77,16 @@ def pick(text: str, wanted: tuple[str, ...]) -> str:
 
 
 def qualify_profile(text: str | None = None) -> str:
-    """Target titles, core skills and tools: all the fit score needs."""
-    return pick(text if text is not None else load_text(), QUALIFY_SECTIONS)
+    """Target titles, core skills and tools, plus an experience overview (role
+    titles, dates and bullets, no employer names) so the AI can judge seniority
+    and real experience, not just keyword lists (decision 24 Nov 2026)."""
+    text = text if text is not None else load_text()
+    profile = pick(text, QUALIFY_SECTIONS)
+    try:
+        from src.cv_model import experience_overview, parse_master_cv
+        cv = parse_master_cv(text)
+        if cv.roles:
+            profile += "\n\n" + experience_overview(cv)
+    except Exception:  # noqa: BLE001 - an odd CV layout still leaves the skills profile
+        pass
+    return profile

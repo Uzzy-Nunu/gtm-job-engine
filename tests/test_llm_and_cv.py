@@ -135,7 +135,7 @@ def test_claude_request_shape():
 
 def test_make_llm_reads_config():
     p = make_llm({"llm": {"provider": "gemini", "fast_model": "a", "draft_model": "b"}}, api_key="k")
-    assert isinstance(p, GeminiProvider) and p.models == {"fast": "a", "draft": "b", "draft_backup": None}
+    assert isinstance(p, GeminiProvider) and p.models == {"fast": "a", "draft": "b", "draft_backup": None, "fast_backup": None}
     with pytest.raises(LLMError, match="Unknown"):
         make_llm({"llm": {"provider": "other"}}, api_key="k")
 
@@ -255,3 +255,20 @@ def test_make_llm_reads_backup_model():
     llm = make_llm({"llm": {"provider": "gemini", "fast_model": "a", "draft_model": "b",
                             "draft_backup_model": "a"}}, api_key="test-key")
     assert llm.models["draft_backup"] == "a"
+
+
+def test_fast_role_uses_its_own_backup_model_when_configured():
+    from src.llm import FakeProvider, LLMError
+    seen = []
+
+    class Busy(FakeProvider):
+        def _call(self, model, system, prompt, schema):
+            seen.append(model)
+            if model == "lite":
+                raise LLMError("Gemini 503: busy or rate-limited", retryable=True)
+            return '{"ok": true}'
+
+    llm = Busy(lambda *a: {}, models={"fast": "lite", "draft": "big", "fast_backup": "big"},
+               max_retries=1, sleep=lambda s: None)
+    assert llm.generate_json(system="s", prompt="p", schema=SCHEMA_OK, role="fast") == {"ok": True}
+    assert seen == ["lite", "lite", "big"] and llm.backup_uses == 1

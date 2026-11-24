@@ -260,7 +260,8 @@ def make_llm(config: dict, api_key: str | None = None):
     llm = config.get("llm") or {}
     provider = (llm.get("provider") or "gemini").lower()
     models = {"fast": llm.get("fast_model"), "draft": llm.get("draft_model"),
-              "draft_backup": llm.get("draft_backup_model")}
+              "draft_backup": llm.get("draft_backup_model"),
+              "fast_backup": llm.get("fast_backup_model")}
     kw = {"max_retries": int(llm.get("max_retries", 3)),
           "backoff": float(llm.get("retry_backoff_seconds", 20)),
           "min_interval": float(llm.get("min_seconds_between_calls", 4))}

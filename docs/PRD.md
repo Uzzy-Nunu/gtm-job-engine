@@ -484,6 +484,7 @@ llm:
   fast_model: gemini-3.5-flash-lite
   draft_model: gemini-3.8-flash
   draft_backup_model: gemini-3.5-flash-lite   # used when the draft model stays busy
+  fast_backup_model: gemini-3.8-flash         # used when the fast model stays busy
 companies:
   greenhouse: []          # board tokens
   lever: []

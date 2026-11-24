@@ -95,6 +95,7 @@ class QualifyReport:
     format_problems: list[str] = field(default_factory=list)
     schema_mode: str = ""
     busy_retries: int = 0
+    backup_uses: int = 0
 
     def count(self, status):
         return sum(1 for o in self.outcomes if o.status == status)
@@ -113,6 +114,8 @@ class QualifyReport:
         if self.format_problems:
             out.append(f"AI answers retried for format: {len(self.format_problems)} "
                        f"({'; '.join(sorted(set(self.format_problems)))})")
+        if self.backup_uses:
+            out.append(f"Backup AI model used for {self.backup_uses} answer(s): the main model was busy.")
         if self.schema_mode:
             out.append(f"AI format mode: {self.schema_mode}")
         for o in self.outcomes:
@@ -258,6 +261,7 @@ class Qualifier:
         report.ai_calls = self.llm.calls
         report.format_problems = list(getattr(self.llm, "format_problems", []))
         report.busy_retries = getattr(self.llm, "busy_retries", 0)
+        report.backup_uses = getattr(self.llm, "backup_uses", 0)
         if hasattr(self.llm, "use_schema"):
             report.schema_mode = ("schema enforced by the API" if self.llm.use_schema
                                   else "plain JSON (API rejected the schema field)")

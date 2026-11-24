@@ -83,6 +83,7 @@ class Outcome:
     status: str            # Qualified | Archived | skipped | error
     score: int | None = None
     reason: str = ""
+    parts: str = ""        # where the points came from, e.g. "remote 20, title 25, skills 9, ..."
 
 
 @dataclass
@@ -118,7 +119,22 @@ class QualifyReport:
             score_txt = f"{o.score:>3}" if o.score is not None else "  -"
             out.append(f"  {o.status:<9} {score_txt}  {public_name(o.new_name, o.deal_id)}"
                        + (f"  ({o.reason})" if o.reason else ""))
+            if o.parts:
+                out.append(f"              {o.parts}")
         return out
+
+
+def breakdown_text(breakdown: list[tuple[str, int]]) -> str:
+    """Short form of the rubric breakdown for logs: 'remote 20 | title 25 | skills 9 | ...'."""
+    if len(breakdown) < 2:
+        return ""
+    short = []
+    for label, points in breakdown:
+        key = label.split(" ")[0].split(":")[0].lower()
+        key = {"no": "salary", "remote": "remote"}.get(key, key)
+        detail = label.split(": ", 1)[1] if label.startswith("Seniority:") else ""
+        short.append(f"{key} {points}" + (f" ({detail})" if detail else ""))
+    return " | ".join(short)
 
 
 def public_name(name: str, deal_id: str) -> str:
@@ -278,7 +294,8 @@ class Qualifier:
             self._link_company(deal["id"], company, facts.get("company_domain"), apply_url or props.get("apply_url"))
         return Outcome(deal["id"], old, new, status, verdict.score,
                        ("hand-picked, kept below threshold" if verdict.note else "")
-                       if verdict.qualified else (verdict.archive_reason or ""))
+                       if verdict.qualified else (verdict.archive_reason or ""),
+                       parts=breakdown_text(verdict.breakdown))
 
     def _link_company(self, deal_id, name, domain, apply_url):
         domain = _clean_domain(domain) or _domain_from(apply_url)

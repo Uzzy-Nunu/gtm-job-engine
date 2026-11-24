@@ -132,7 +132,7 @@
     },
     {
       "id": "s4",
-      "note": "EMEA senior, requirements met, no salary: below threshold",
+      "note": "EMEA senior, requirements met, no salary: below threshold (qualifies since the bar moved to 60 on 24 Nov 2026)",
       "description": "Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. Senior Marketing Operations Manager at Fictional AI. Remote across EMEA. ",
       "ai": {
         "job_title": "Senior Marketing Operations Manager",
@@ -168,9 +168,8 @@
         ]
       },
       "expect": {
-        "status": "Archived",
-        "score": 62,
-        "reason": "below the threshold"
+        "status": "Qualified",
+        "score": 62
       }
     },
     {

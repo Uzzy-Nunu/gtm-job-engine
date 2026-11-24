@@ -77,7 +77,7 @@ def test_qualified_deal_gets_analysis_company_and_remote_scope():
     deal = hs.objects["deals"][deal_id]["properties"]
     assert deal["remote_scope"] == "Worldwide"
     analysis = deal["job_analysis"]
-    assert analysis.startswith("Fit score: 96/100 (threshold 70) -> Qualified")
+    assert analysis.startswith(f"Fit score: 96/100 (threshold {CONFIG['fit_threshold']}) -> Qualified")
     assert "Gaps (don't add these to your CV unless true): SQL" in analysis
     companies = hs.all("companies")
     assert [c["properties"]["domain"] for c in companies] == ["samplecorp.example"]
@@ -266,3 +266,13 @@ def test_rescore_touches_only_low_score_archived_deals():
     stage = lambda d: hs.stage_label(hs.objects["deals"][d]["properties"]["dealstage"])  # noqa: E731
     assert stage(low) == "Qualified"          # sample s1 scores 96 with today's rubric
     assert stage(hard) == stage(by_hand) == "Archived" and stage(new) == "New"
+
+
+def test_senior_role_not_fully_met_gets_partial_seniority_points():
+    facts = dict(BY_ID["s1"]["ai"], seniority="Senior", senior_requirements_met=False)
+    parts = dict(score(facts, CONFIG).breakdown)
+    assert parts["Seniority: Senior, requirements not fully met"] == 7
+    facts["senior_requirements_met"] = True
+    assert dict(score(facts, CONFIG).breakdown)["Seniority: Senior"] == 15
+    facts["seniority"] = "Lead"
+    assert dict(score(facts, CONFIG).breakdown)["Seniority: Lead"] == 0

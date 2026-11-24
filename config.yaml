@@ -127,7 +127,7 @@ eligible_regions:
   - WAT
 
 # --- Fit score rubric (PRD §11.3) ------------------------------------
-fit_threshold: 70          # score >= this -> Qualified, else Archived
+fit_threshold: 60          # score >= this -> Qualified, else Archived (lowered from 70 on 24 Nov 2026)
 qualify:
   # Jobs Peace captured herself (paste form, capture button) skip the score
   # threshold: they're still scored and still archived by the hard filters
@@ -148,6 +148,7 @@ rubric:
     points: 15
     preferred: [Entry, Mid]
     allowed_if_requirements_match: [Senior]
+    senior_partial_points: 7     # Senior role, requirements not fully met (added 24 Nov 2026)
     unclear_points: 7            # seniority not stated
   salary_listed: 10
 

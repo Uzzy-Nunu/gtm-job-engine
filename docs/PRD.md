@@ -251,7 +251,7 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | QU-1 | Process deals in `New`. Pull out job details into strict JSON (see §11.2). | P0 |
 | QU-2 | **Hard filters:** archive if `remote_scope` is Not remote or Country-restricted to a country Peace can't work from, or if the title clearly doesn't match. Record the reason. | P0 |
 | QU-3 | **Fit score (0–100)** using the rubric in §11.3. Store the score and reasons. | P0 |
-| QU-4 | Score ≥ `fit_threshold` (default 70) → `Qualified`. Otherwise → `Archived`. **Decision (18 Nov 2026):** jobs Peace captured herself (`LinkedIn Post`, `Company Site`) skip the threshold, because LinkedIn posts rarely state salary or clear remote terms, so even strong posts scored about 53 in the first live preview. They are still scored (for priority) and still archived by the hard filters. Board imports keep the threshold. Configurable via `qualify.hand_picked_sources`. | P0 |
+| QU-4 | Score ≥ `fit_threshold` (60 since 24 Nov 2026; was 70) → `Qualified`. Otherwise → `Archived`. **Decision (18 Nov 2026):** jobs Peace captured herself (`LinkedIn Post`, `Company Site`) skip the threshold, because LinkedIn posts rarely state salary or clear remote terms, so even strong posts scored about 53 in the first live preview. They are still scored (for priority) and still archived by the hard filters. Board imports keep the threshold. Configurable via `qualify.hand_picked_sources`. | P0 |
 | QU-7 | **Archive diagnosis and re-scoring (24 Nov 2026):** the Archive report counts why deals were archived and which rubric parts lost points. First report: 19 of 20 archived; 15 for low scores, with skills overlap averaging 5.6/20 and seniority 4.0/15 (11 of 15 were Senior roles). Cause: the Qualify AI only saw skills and tools lists, so it could neither credit real experience nor confirm senior requirements. **Decision:** the Qualify profile now also includes an experience overview (role titles, dates and usable bullets, projects, certifications; no employer names or contact details), and the prompt counts equivalent tools and adds up years across relevant roles. The Qualify workflow can re-score Deals archived for a low score (`rescore`); hard-filtered and hand-archived deals are left alone. The rubric and threshold are reviewed after the re-score preview. | P0 |
 | QU-6 | **Preview mode:** the Qualify workflow can run in `preview`, reading real New deals and calling the AI but writing nothing, so scores can be checked before going live. | P0 |
 | QU-5 | If the job text is too short or missing (for example a LinkedIn post with no description), try to fetch the apply URL's page text. If it's still missing, flag `pipeline_error` and leave it for manual review. | P1 |
@@ -365,9 +365,12 @@ Outputs are checked against the schema. If the output is invalid, retry once, th
 | Seniority not stated (instead of the 15 below) | 7 |
 | Tools and skills overlap with the master CV | up to 20 |
 | Seniority Entry or Mid (Senior allowed if requirements match) | 15 |
+| Senior role, requirements close but not fully met (added 24 Nov 2026) | 7 |
 | Salary listed | 10 |
 
 Hard filters (§10.2) are applied before scoring.
+
+**Decision (24 Nov 2026):** `fit_threshold` lowered from 70 to 60 and partial seniority credit added. After the Qualify AI was given Peace's experience, 15 re-scored jobs still landed at 53-69: most were Senior roles scoring 0 for seniority, and almost no postings list a salary. Peace chose a lower bar so more roles reach drafting; she still reviews every draft.
 
 ### 11.4 Prompts (stored in `/prompts`, version-controlled)
 `extract.md`, `score.md`, `company_brief.md`, `tailor_cv.md`, `cover_letter.md`, `messages.md`, `truth_check.md`
@@ -472,7 +475,7 @@ gtm-job-engine/
 target_titles: ["GTM Engineer", "Growth Engineer", "Marketing Engineer",
                 "Marketing Automation", "Growth Operations", "Revenue Operations"]
 adjacent_titles: ["Growth Marketing", "Marketing Operations", "Founder's Associate"]
-fit_threshold: 70
+fit_threshold: 60
 daily_import_cap: 100     # set for 15 a day (§3 decision)
 daily_draft_cap: 20       # set for 15 a day (§3 decision)
 followup_after_days: 5

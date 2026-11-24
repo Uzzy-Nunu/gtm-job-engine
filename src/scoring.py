@@ -73,6 +73,9 @@ def score(facts: dict, config: dict, hand_picked: bool = False) -> Verdict:
         sen_points = sen.get("points", 15)
     elif level in sen.get("allowed_if_requirements_match", ["Senior"]) and facts.get("senior_requirements_met"):
         sen_points = sen.get("points", 15)
+    elif level in sen.get("allowed_if_requirements_match", ["Senior"]):
+        sen_points = sen.get("senior_partial_points", 0)   # close, but not a full match
+        level = f"{level}, requirements not fully met"
     elif level == "Unclear":
         sen_points = sen.get("unclear_points", 7)
     else:

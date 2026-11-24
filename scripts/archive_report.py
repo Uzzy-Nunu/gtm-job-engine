@@ -114,8 +114,7 @@ def report(deals: list[dict]) -> list[str]:
             for k, v in r["parts"].items():
                 sums[k] += v
                 counts[k] += 1
-        lines += ["", "LOW-SCORE JOBS: AVERAGE POINTS PER PART (max: remote 30, title 25, skills 20, "
-                  "seniority 15, salary 10)"]
+        lines += ["", "LOW-SCORE JOBS: AVERAGE POINTS PER PART (maximums are in config.yaml > rubric)"]
         lines += [f"- {name}: {sums[k] / counts[k]:.1f}" for name, k in PART_NAMES if counts[k]]
         lines += ["", "LOW-SCORE JOBS: SENIORITY"] + \
                  [f"- {s or 'unknown'}: {n}" for s, n in Counter(r["seniority"] for r in low).most_common()]

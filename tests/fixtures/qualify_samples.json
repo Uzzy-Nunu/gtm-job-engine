@@ -40,7 +40,7 @@
       },
       "expect": {
         "status": "Qualified",
-        "score": 96,
+        "score": 94,
         "name": "GTM Engineer - SampleCorp"
       }
     },
@@ -169,7 +169,7 @@
       },
       "expect": {
         "status": "Qualified",
-        "score": 62
+        "score": 68
       }
     },
     {
@@ -211,7 +211,7 @@
       },
       "expect": {
         "status": "Qualified",
-        "score": 70,
+        "score": 69,
         "name": "AI Automation Specialist - Demo Systems"
       }
     },
@@ -254,7 +254,7 @@
       },
       "expect": {
         "status": "Archived",
-        "score": 40
+        "score": 45
       }
     },
     {

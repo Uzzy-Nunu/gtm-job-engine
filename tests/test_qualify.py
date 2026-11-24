@@ -65,7 +65,7 @@ def test_sample_jobs_score_as_expected(sample):
 def test_rubric_breakdown_matches_prd_weights():
     v = score(BY_ID["s1"]["ai"], CONFIG)
     assert dict(v.breakdown) == {"Remote worldwide": 30, "Title matches your target list": 25,
-                                 "Skills and tools overlap (16/20)": 16, "Seniority: Mid": 15, "Salary listed": 10}
+                                 "Skills and tools overlap (16/20)": 24, "Seniority: Mid": 15}
 
 
 # --- deal updates ---------------------------------------------------------------
@@ -77,7 +77,7 @@ def test_qualified_deal_gets_analysis_company_and_remote_scope():
     deal = hs.objects["deals"][deal_id]["properties"]
     assert deal["remote_scope"] == "Worldwide"
     analysis = deal["job_analysis"]
-    assert analysis.startswith(f"Fit score: 96/100 (threshold {CONFIG['fit_threshold']}) -> Qualified")
+    assert analysis.startswith(f"Fit score: 94/100 (threshold {CONFIG['fit_threshold']}) -> Qualified")
     assert "Gaps (don't add these to your CV unless true): SQL" in analysis
     companies = hs.all("companies")
     assert [c["properties"]["domain"] for c in companies] == ["samplecorp.example"]
@@ -89,7 +89,7 @@ def test_preview_mode_writes_nothing():
     deal_id = seed(hs, "s1")
     before = json.dumps(hs.objects, sort_keys=True)
     report = qualifier(hs, write=False).run()
-    assert report.outcomes[0].status == "Qualified" and report.outcomes[0].score == 96
+    assert report.outcomes[0].status == "Qualified" and report.outcomes[0].score == 94
     assert json.dumps(hs.objects, sort_keys=True) == before
     assert not any(method in ("PATCH", "PUT") for method, _ in hs.calls)
     assert hs.stage_label(hs.objects["deals"][deal_id]["properties"]["dealstage"]) == "New"
@@ -221,11 +221,11 @@ def test_format_retries_are_reported_without_content():
 
 def test_hand_picked_capture_below_threshold_is_kept():
     hs = FakeHubSpot()
-    deal_id = seed(hs, "s6", job_source="LinkedIn Post")       # scores 40
+    deal_id = seed(hs, "s6", job_source="LinkedIn Post")       # scores 45
     report = qualifier(hs).run()
     deal = hs.objects["deals"][deal_id]["properties"]
     assert hs.stage_label(deal["dealstage"]) == "Qualified"
-    assert int(deal["fit_score"]) == 40
+    assert int(deal["fit_score"]) == 45
     assert "Hand-picked by you" in deal["job_analysis"]
     assert report.outcomes[0].reason == "hand-picked, kept below threshold"
 
@@ -264,7 +264,7 @@ def test_rescore_touches_only_low_score_archived_deals():
 
     qualifier(hs, rescore_archived=True).run()
     stage = lambda d: hs.stage_label(hs.objects["deals"][d]["properties"]["dealstage"])  # noqa: E731
-    assert stage(low) == "Qualified"          # sample s1 scores 96 with today's rubric
+    assert stage(low) == "Qualified"          # sample s1 scores 94 with today's rubric
     assert stage(hard) == stage(by_hand) == "Archived" and stage(new) == "New"
 
 

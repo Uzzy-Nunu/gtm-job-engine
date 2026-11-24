@@ -363,14 +363,16 @@ Outputs are checked against the schema. If the output is invalid, retry once, th
 | Adjacent title (Growth Marketing, Marketing Ops, GTM Strategist, Founder's Associate, Chief of Staff; full list in `config.yaml`) | 15 |
 | Explore title (`explore_titles`) | 10 |
 | Seniority not stated (instead of the 15 below) | 7 |
-| Tools and skills overlap with the master CV | up to 20 |
+| Tools and skills overlap with the master CV (AI judges 0-20, scaled) | up to 30 (was 20) |
 | Seniority Entry or Mid (Senior allowed if requirements match) | 15 |
 | Senior role, requirements close but not fully met (added 24 Nov 2026) | 7 |
-| Salary listed | 10 |
+| Salary listed | 0 (was 10) |
 
 Hard filters (§10.2) are applied before scoring.
 
 **Decision (24 Nov 2026):** `fit_threshold` lowered from 70 to 60 and partial seniority credit added. After the Qualify AI was given Peace's experience, 15 re-scored jobs still landed at 53-69: most were Senior roles scoring 0 for seniority, and almost no postings list a salary. Peace chose a lower bar so more roles reach drafting; she still reviews every draft.
+
+**Decision (24 Nov 2026, same day):** the re-score preview at 60 showed weak-skill jobs passing on remote, title and salary points (an applied-AI research role at skills 4/20, a Chief of Staff role at 5/20) while a Senior GTM Engineer missed by a point. Skills overlap is now worth up to 30 points (the AI still judges 0-20; code scales it) and a listed salary is worth 0, so the rubric still totals 100.
 
 ### 11.4 Prompts (stored in `/prompts`, version-controlled)
 `extract.md`, `score.md`, `company_brief.md`, `tailor_cv.md`, `cover_letter.md`, `messages.md`, `truth_check.md`

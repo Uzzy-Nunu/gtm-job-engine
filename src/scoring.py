@@ -11,6 +11,9 @@ from dataclasses import dataclass, field
 from src.job_filter import TitleFilter, _contains_phrase, _norm, region_ok
 
 
+AI_OVERLAP_SCALE = 20      # skills_overlap_points in the Qualify schema is 0-20
+
+
 @dataclass
 class Verdict:
     score: int
@@ -63,9 +66,10 @@ def score(facts: dict, config: dict, hand_picked: bool = False) -> Verdict:
                     "explore": titles.get("explore_match", 10)}.get(match, 0)
     parts.append((f"Title {'matches your ' + match + ' list' if match else 'not on your lists'}", title_points))
 
+    # The AI judges overlap on a 0-20 scale; the rubric decides what it's worth.
     cap = int(rubric.get("skills_tools_overlap_max", 20))
-    overlap = max(0, min(cap, int(facts.get("skills_overlap_points") or 0)))
-    parts.append((f"Skills and tools overlap ({overlap}/{cap})", overlap))
+    overlap = max(0, min(AI_OVERLAP_SCALE, int(facts.get("skills_overlap_points") or 0)))
+    parts.append((f"Skills and tools overlap ({overlap}/{AI_OVERLAP_SCALE})", round(overlap * cap / AI_OVERLAP_SCALE)))
 
     sen = rubric.get("seniority", {})
     level = facts.get("seniority") or "Unclear"
@@ -82,8 +86,10 @@ def score(facts: dict, config: dict, hand_picked: bool = False) -> Verdict:
         sen_points = 0
     parts.append((f"Seniority: {level}", sen_points))
 
-    parts.append(("Salary listed" if facts.get("salary_text") else "No salary listed",
-                  rubric.get("salary_listed", 10) if facts.get("salary_text") else 0))
+    salary_points = int(rubric.get("salary_listed", 10))
+    if salary_points:
+        parts.append(("Salary listed" if facts.get("salary_text") else "No salary listed",
+                      salary_points if facts.get("salary_text") else 0))
 
     total = min(100, sum(p for _, p in parts))
     if total >= threshold:

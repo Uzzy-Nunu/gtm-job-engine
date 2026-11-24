@@ -143,14 +143,14 @@ rubric:
     target_match: 25
     adjacent_match: 15
     explore_match: 10
-  skills_tools_overlap_max: 20   # the AI's judgement of overlap with the master CV, 0-20
+  skills_tools_overlap_max: 30   # the AI judges overlap 0-20; scaled to this (raised from 20 on 24 Nov 2026)
   seniority:
     points: 15
     preferred: [Entry, Mid]
     allowed_if_requirements_match: [Senior]
     senior_partial_points: 7     # Senior role, requirements not fully met (added 24 Nov 2026)
     unclear_points: 7            # seniority not stated
-  salary_listed: 10
+  salary_listed: 0          # was 10; a listed salary isn't a sign of fit (24 Nov 2026)
 
 # --- Volume caps (Phase 1 -> Phase 2 values in comments) -------------
 daily_import_cap: 100      # set for 15 applications a day (decision 17 Nov 2026)

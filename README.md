@@ -18,25 +18,23 @@ Automate the repetitive research and drafting. Keep a human in charge of every i
 
 ```mermaid
 flowchart LR
-    subgraph Intake
-        A1[Job boards<br/>RemoteOK, Himalayas, WWR,<br/>Remotive, Jobicy, RSS]
-        A2[79 company careers pages<br/>Greenhouse, Lever, Ashby]
-        A3[LinkedIn job-alert emails<br/>read-only Gmail]
-        A4[Paste form and<br/>capture bookmarklet<br/>Cloudflare Worker]
-    end
-    A1 & A2 & A3 --> F{Title, remote,<br/>region and date filters}
-    F --> N[HubSpot deal: New]
-    A4 --> N
-    N --> Q[AI qualify<br/>facts + fit score in code]
-    Q -->|below 60 or hard filter| X[Archived]
-    Q --> R[Research<br/>company brief and angle]
-    R --> D[Draft<br/>CV, cover letter, messages]
-    D --> T{Truth check}
-    T --> RR[Ready for Review]
-    RR --> H([Peace reviews, edits,<br/>applies and sends])
-    H --> AP[Applied] --> FU[Follow-up task<br/>after 5 quiet days]
-    S[[GitHub Actions schedules]] -.-> F & Q & R & D
-    M[[Daily digest, weekly summary,<br/>failure alerts by email]] -.-> RR & AP
+    A1["Job boards: RemoteOK, Himalayas, WWR, Remotive, Jobicy, RSS"] --> F
+    A2["79 company careers pages: Greenhouse, Lever, Ashby"] --> F
+    A3["LinkedIn job-alert emails, read-only Gmail"] --> F
+    F{"Title, remote, region and date filters"} --> N
+    A4["Paste form and capture bookmarklet on a Cloudflare Worker"] --> N
+    N["HubSpot deal: New"] --> Q["AI qualify: facts from AI, fit score in code"]
+    Q -->|"below 60 or hard filter"| X["Archived"]
+    Q --> R["Research: company brief and angle"]
+    R --> D["Draft: CV, cover letter, messages"]
+    D --> T{"Truth check"}
+    T --> RR["Ready for Review"]
+    RR --> H(["Peace reviews, edits, applies and sends"])
+    H --> AP["Applied"]
+    AP --> FU["Follow-up task after 5 quiet days"]
+    S[["GitHub Actions schedules"]] -.-> F
+    S -.-> Q
+    M[["Daily digest, weekly summary, failure alerts"]] -.-> RR
 ```
 
 Every job is a HubSpot deal, and every step moves it by changing its stage. The CRM doubles as the review queue.

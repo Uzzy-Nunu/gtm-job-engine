@@ -49,6 +49,19 @@ def is_linkedin(url: str) -> bool:
     return host in LINKEDIN_HOSTS or host.endswith(".linkedin.com")
 
 
+_LINKEDIN_JOB = re.compile(r"/(?:comm/)?jobs/view/(?:[^/?#]*?-)?(\d{6,})", re.IGNORECASE)
+
+
+def linkedin_job_url(url: str) -> str | None:
+    """Canonical https://www.linkedin.com/jobs/view/<id> for a LinkedIn job link
+    (as found in job-alert emails), or None. Used only as a duplicate key and a
+    link for Peace: the system never opens it."""
+    if not is_linkedin(url):
+        return None
+    m = _LINKEDIN_JOB.search(urlsplit(_clean_input(url)).path)
+    return f"https://www.linkedin.com/jobs/view/{m.group(1)}" if m else None
+
+
 def _clean_input(url: str) -> str:
     url = (url or "").strip().strip("<>\"'")
     if not url:
@@ -65,6 +78,9 @@ def normalise_url(url: str) -> str:
     no 'www.', no tracking parameters, no #fragment, no trailing slash."""
     url = _clean_input(url)
     if is_linkedin(url):
+        job = linkedin_job_url(url)
+        if job:
+            return job
         post = parse_linkedin_post(url)
         return post.canonical_url
     parts = urlsplit(url)

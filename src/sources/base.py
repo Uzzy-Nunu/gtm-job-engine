@@ -32,6 +32,7 @@ class JobPosting:
     company_website: str | None = None
     posted_at: datetime | None = None
     salary: str | None = None
+    needs_text: bool = False        # no description yet (e.g. a LinkedIn alert not found elsewhere)
 
 
 class SourceError(RuntimeError):

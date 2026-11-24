@@ -271,3 +271,15 @@ def make_llm(config: dict, api_key: str | None = None):
     if provider == "claude":
         return ClaudeProvider(key, models, **kw)
     raise LLMError(f"Unknown llm.provider '{provider}' in config.yaml (use gemini or claude).")
+
+
+def exit_code(has_errors: bool, stopped: str | None) -> int:
+    """Exit code for an AI step. A run that stopped only because the AI was busy
+    (Gemini 503/429) isn't a failure: the remaining deals wait for the next run.
+    It shows as a yellow warning on GitHub instead of a red run and an alert email.
+    Real errors still fail the run (decision 24 Nov 2026)."""
+    if has_errors:
+        return 1
+    if stopped:
+        print("::warning::AI busy: the remaining deals wait for the next run.")
+    return 0

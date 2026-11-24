@@ -25,7 +25,7 @@ from src.hubspot_client import HubSpotError
 from src.hubspot_schema import (CONTACT_LINKEDIN_PROPERTY, NEEDS_POST_TEXT,
                                 PIPELINE_LABEL)
 from src.urls import (URLError, company_domain, find_external_job_links,
-                      is_linkedin, normalise_url, parse_linkedin_post)
+                      is_linkedin, linkedin_job_url, normalise_url, parse_linkedin_post)
 
 MAX_TEXT = 60_000  # HubSpot multi-line text limit is 65,536 characters
 NOTES_MARKER = "\n\n--- Notes from Peace ---"
@@ -71,6 +71,7 @@ class Submission:
     company: str | None = None
     company_website: str | None = None
     apply_url: str | None = None
+    needs_text: bool = False         # created without a description: flag NEEDS POST TEXT
 
 
 @dataclass
@@ -141,7 +142,7 @@ class Intake:
         text = (sub.text or "").strip()[:MAX_TEXT]
         notes = (sub.notes or "").strip()
 
-        post = parse_linkedin_post(sub.url) if is_linkedin(sub.url) else None
+        post = parse_linkedin_post(sub.url) if is_linkedin(sub.url) and not linkedin_job_url(sub.url) else None
         key = post.canonical_url if post else normalise_url(sub.url)
         source = sub.source or ("LinkedIn Post" if post else _source_for(key))
 
@@ -149,7 +150,8 @@ class Intake:
         existing = self._search_one("deals", [{"propertyName": "job_url", "operator": "EQ", "value": key}],
                                     ["dealname", "pipeline_error", "description"])
         if existing:
-            return self._handle_existing(existing, text, notes)
+            # A job still waiting for its description only counts as updated by real text.
+            return self._handle_existing(existing, "" if sub.needs_text else text, notes)
         if post and post.profile_url:
             twin = self._same_poster_twin(post, text)
             if twin:
@@ -183,6 +185,10 @@ class Intake:
             flags.append(NEEDS_POST_TEXT)
             pipeline_error = (f"{NEEDS_POST_TEXT}: open this deal in HubSpot and paste the "
                               "LinkedIn post text into 'Deal description'.")
+        if sub.needs_text and not pipeline_error:
+            flags.append(NEEDS_POST_TEXT)
+            pipeline_error = (f"{NEEDS_POST_TEXT}: open the LinkedIn job (Apply URL), copy the job description "
+                              "and paste it into 'Deal description', then clear this field.")
         if post and post.name_guess:
             flags.append("POSTER NAME UNCONFIRMED")
 

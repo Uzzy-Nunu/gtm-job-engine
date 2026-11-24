@@ -27,7 +27,7 @@ import yaml  # noqa: E402
 from src.cv_sections import qualify_profile  # noqa: E402
 from src.fake_hubspot import FakeHubSpot  # noqa: E402
 from src.hubspot_client import HubSpotClient, load_dotenv  # noqa: E402
-from src.llm import FakeProvider, make_llm  # noqa: E402
+from src.llm import FakeProvider, make_llm, exit_code  # noqa: E402
 from src.qualify import Qualifier  # noqa: E402
 from src.sources.base import Http  # noqa: E402
 
@@ -87,7 +87,7 @@ def main(argv=None) -> int:
     if summary:
         with open(summary, "a", encoding="utf-8") as f:
             f.write(f"## Qualify jobs: {label}\n\n```\n" + "\n".join(lines) + "\n```\n")
-    return 0 if report.ok else 1
+    return exit_code(report.count("error") > 0, report.stopped)
 
 
 if __name__ == "__main__":

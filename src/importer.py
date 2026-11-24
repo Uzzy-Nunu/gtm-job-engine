@@ -19,11 +19,12 @@ from src.intake import Intake, Submission
 from src.job_filter import TitleFilter, is_recent, looks_remote, region_ok
 from src.sources import company_boards, remote_boards
 from src.sources import feeds as generic_feeds
+from src.sources import linkedin_alerts
 from src.sources.base import JobPosting
 from src.urls import URLError, normalise_url
 
 BOARD_SOURCES = ["Greenhouse", "Lever", "Ashby", "RemoteOK", "Himalayas", "WWR",
-                 "Remotive", "Jobicy", "Other"]
+                 "Remotive", "Jobicy", "Other", "LinkedIn Alert"]
 
 
 @dataclass
@@ -37,6 +38,7 @@ class ImportReport:
     updated: int = 0
     not_imported_cap: int = 0
     errors: list[str] = field(default_factory=list)
+    alerts: linkedin_alerts.AlertStats | None = None
     cap: int = 0
     already_today: int = 0
     matched_by_list: dict[str, int] = field(default_factory=lambda: {"target": 0, "adjacent": 0, "explore": 0})
@@ -55,6 +57,8 @@ class ImportReport:
                    + ", ".join(f"{k} {v}" for k, v in self.skipped.items() if v))
         out.append("Matches by title list: " + ", ".join(
             f"{k} {self.matched_by_list[k]} (new {self.created_by_list[k]})" for k in self.matched_by_list))
+        if self.alerts:
+            out.append(self.alerts.line())
         out.append(f"Daily cap: {self.cap} (already imported today: {self.already_today})")
         out.append(f"New deals: {len(self.created)} | duplicates: {self.duplicates} | "
                    f"updated: {self.updated} | left for tomorrow (cap): {self.not_imported_cap}")
@@ -68,8 +72,9 @@ class ImportReport:
         return out
 
 
-def collect(config: dict, http, report: ImportReport) -> list[JobPosting]:
-    """Fetch from every configured board, isolating failures."""
+def collect(config: dict, http, report: ImportReport, mailbox=None) -> list[JobPosting]:
+    """Fetch from every configured board, isolating failures. `mailbox` reads
+    LinkedIn job-alert emails when `linkedin_alerts.enabled` is true."""
     jobs: list[JobPosting] = []
     readers = []
     companies = config.get("companies") or {}
@@ -101,6 +106,11 @@ def collect(config: dict, http, report: ImportReport) -> list[JobPosting]:
         if feed.get("enabled", True) is False or not feed.get("url"):
             continue
         readers.append((feed.get("name") or feed["url"], lambda f=feed: generic_feeds.read_feed(http, f)))
+
+    if (config.get("linkedin_alerts") or {}).get("enabled") and mailbox is not None:
+        report.alerts = linkedin_alerts.AlertStats()
+        readers.append(("LinkedIn alerts",
+                        lambda: linkedin_alerts.read_alerts(http, config, mailbox, report.alerts)))
 
     for label, read in readers:
         try:
@@ -172,7 +182,7 @@ def to_submission(job: JobPosting, title_list: str = "target") -> Submission:
     return Submission(
         url=job.url, text="\n".join(header) + "\n\n" + (job.text or ""), source=job.source,
         title=job.title or None, company=job.company or None,
-        company_website=job.company_website, apply_url=job.apply_url,
+        company_website=job.company_website, apply_url=job.apply_url, needs_text=job.needs_text,
     )
 
 
@@ -189,10 +199,10 @@ def imported_today(hs, tz: str, now: datetime) -> int:
     return int((found or {}).get("total", 0))
 
 
-def run_import(config: dict, hs, http, now: datetime | None = None) -> ImportReport:
+def run_import(config: dict, hs, http, now: datetime | None = None, mailbox=None) -> ImportReport:
     now = now or datetime.now(timezone.utc)
     report = ImportReport(cap=int(config.get("daily_import_cap", 40)))
-    jobs = select(collect(config, http, report), config, report, now)
+    jobs = select(collect(config, http, report, mailbox), config, report, now)
 
     try:
         report.already_today = imported_today(hs, config.get("timezone", "UTC"), now)

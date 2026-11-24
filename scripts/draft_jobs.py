@@ -26,7 +26,7 @@ from src.cv_sections import load_text  # noqa: E402
 from src.draft import Drafter  # noqa: E402
 from src.fake_hubspot import FakeHubSpot  # noqa: E402
 from src.hubspot_client import HubSpotClient, load_dotenv  # noqa: E402
-from src.llm import FakeProvider, make_llm  # noqa: E402
+from src.llm import FakeProvider, make_llm, exit_code  # noqa: E402
 
 OUT = ROOT / "output" / "drafts"
 SAMPLE_CV = ROOT / "tests" / "fixtures" / "sample_cv_full.md"
@@ -84,7 +84,7 @@ def main(argv=None) -> int:
     if summary:
         with open(summary, "a", encoding="utf-8") as f:
             f.write(f"## Draft jobs: {label}\n\n```\n" + "\n".join(lines) + "\n```\n")
-    return 0 if report.ok else 1
+    return exit_code(bool(report.errors), report.stopped)
 
 
 if __name__ == "__main__":

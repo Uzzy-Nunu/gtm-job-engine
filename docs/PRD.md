@@ -242,6 +242,8 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = nic
 | IN-5 | **Company upsert:** find or create the company by domain or name and link it to the deal. | P0 |
 | IN-6 | **Poster contact (LinkedIn captures and pasted links):** create or link a contact with `pipeline_role = Poster`, using the profile link from the URL (IN-1c), plus any name, title or company the AI finds in the post text. If the same person posts again, the existing contact is reused (matched on profile link). | P0 |
 | IN-7 | **LinkedIn job alerts:** Apps Script reads the Gmail label `job-alerts`, pulls out job links and posts them to the Worker. | P1 |
+
+**Decision and build (24 Nov 2026):** the import run reads the alerts itself over IMAP with the existing Gmail app password (Peace chose this over Apps Script: no extra setup). Read-only (`BODY.PEEK`), only messages from LinkedIn's job-alert senders in the last `days_back` days; LinkedIn is never opened. Each alert job (title, company, location and job ID from the email) passes the title and location filters, then is looked up on the company's own Greenhouse, Lever or Ashby board (target companies first, then the company name as a token). Found: imported with the full description and the company's apply link (Job Source `LinkedIn Alert`). Not found: created with the email's details, the LinkedIn job link as Apply URL, and `NEEDS POST TEXT` so Peace pastes the description. The duplicate key for unfound jobs is `https://www.linkedin.com/jobs/view/<id>`. Counts toward the daily import cap. **Also decided 24 Nov 2026:** an AI step that stops only because Gemini is busy exits with a GitHub warning, not a failure, so a busy AI doesn't send alert emails; real errors still fail the run.
 | IN-8 | **Daily cap:** at most 100 new deals imported from job boards per day (set for 15 applications a day; see the §3 decision), to keep review manageable (configurable). | P0 |
 
 ### 10.2 Qualify
@@ -504,6 +506,7 @@ timezone: "Africa/Lagos"
 | `MASTER_CV` | GitHub | Master CV content |
 | `CAPTURE_SECRET` | GitHub (copied into the Worker at deploy time), typed once into the form on each device | Protects the capture endpoint |
 | `DIGEST_TO_EMAIL` | GitHub | Digest and alert recipient (optional; defaults to `GMAIL_ADDRESS`) |
+| `ALERTS_GMAIL_ADDRESS`, `ALERTS_GMAIL_APP_PASSWORD` | GitHub | Optional: the Gmail account that receives LinkedIn job alerts, when it isn't `GMAIL_ADDRESS` (read-only IMAP) |
 | `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD` | GitHub | Gmail account and app password that send the digest and failure alerts |
 
 ---

@@ -280,6 +280,17 @@ companies:
 #     - samplecorp
 #     - {token: demo-co, name: Demo Co, website: https://demo.example}
 
+# LinkedIn job-alert emails (PRD IN-7). Read from the Gmail account in the
+# GMAIL_ADDRESS / GMAIL_APP_PASSWORD secrets (read-only; only these senders).
+# Each alert job that passes the title and location filters is looked up on the
+# company's own board; if not found, it's created flagged NEEDS POST TEXT.
+linkedin_alerts:
+  enabled: true
+  senders: [jobalerts-noreply@linkedin.com, jobs-listings@linkedin.com]
+  days_back: 3                  # emails received in the last N days (re-reads are safe: duplicates are skipped)
+  max_emails: 60
+  find_on_company_boards: true
+
 public_feeds:
   remoteok: true
   himalayas: true

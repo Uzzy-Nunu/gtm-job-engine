@@ -105,7 +105,7 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 ## Email: daily digest and alerts (Milestone 6)
 - **Daily digest** (about 07:27 Lagos, workflow **Daily digest**): deals Ready for Review (fit score, coverage, link), follow-ups due (Applied with no update for `digest.follow_up_days`, default 5), deals that need you (anything in Pipeline Error, except Archived and Rejected), scheduled runs that failed in the last 24 hours, and counts per stage. It only reads HubSpot.
 - **Alerts:** if a scheduled Import jobs, Process captures or Daily digest run fails, you get an email with a link to the run. GitHub also emails failed scheduled runs to you by default.
-- **Sending:** through Gmail with an app password (the system only sends mail; it never reads your inbox). Secrets: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, and optionally `DIGEST_TO_EMAIL` (defaults to the Gmail address).
+- **Sending:** through Gmail with an app password (the digest only sends mail; the import run reads only LinkedIn job-alert emails, read-only). Secrets: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, and optionally `DIGEST_TO_EMAIL` (defaults to the Gmail address).
 - **Turning on the daily schedule:** repository variable `ENABLE_DIGEST` = `true`. Delete it to pause.
 - **By hand:** Actions > **Daily digest** > Run workflow (`send` emails it now; `preview` shows counts only). Locally: `python scripts/send_digest.py --offline` (made-up deals), `--preview` (saves `output/digest-preview.html`), or no flag to send.
 - **Follow-up tasks:** each digest run adds a HubSpot task (`Follow up: <deal>`, due today) to Applied deals with no update for 5 days. Find them under CRM > Tasks (they have no owner, so use the "All tasks" view). Send the follow-up, mark the task complete and move the deal to Followed Up. A deal never gets a second task while one is open.
@@ -132,6 +132,16 @@ explore_titles:
 - Each explore deal's description says `Matched title list: explore`, and the import summary shows `Matches by title list` so you can see what each list brings in.
 - After a week or two, move titles that bring good roles up to `adjacent_titles` and delete ones that don't.
 - Each explore title is also searched on Himalayas, so keep the list to about 5.
+
+## LinkedIn job alerts
+The import run (06:17 and 14:17 Lagos) reads your LinkedIn job-alert emails from the Gmail account in `GMAIL_ADDRESS`, read-only, and only emails from LinkedIn's job-alert senders. It never opens LinkedIn.
+- **Set up alerts on LinkedIn yourself:** search a title, set the location (for example Worldwide, EMEA or Nigeria) and the Remote filter, then turn on the alert with daily emails. Alerts must reach a Gmail inbox the engine can read:
+  - **Forward them** to the `GMAIL_ADDRESS` Gmail. From a Gmail account: Settings > Forwarding and POP/IMAP > Add a forwarding address, confirm the code, then create a filter `from:(jobalerts-noreply@linkedin.com OR jobs-listings@linkedin.com)` > Forward it to that address. Gmail keeps LinkedIn as the sender. If another provider's forwarding shows your own address as the sender, add that address to `linkedin_alerts.senders` in config.yaml.
+  - **Or read the LinkedIn email's own Gmail inbox:** create an app password there and add the secrets `ALERTS_GMAIL_ADDRESS` and `ALERTS_GMAIL_APP_PASSWORD`. These take priority over the digest's Gmail secrets for reading alerts.
+- **What happens to each alert job:** jobs failing the title or location filters are skipped. The rest are looked up on the company's own job board. Found: the job comes in with the full description. Not found: the deal is flagged `NEEDS POST TEXT`; open the Apply URL (the LinkedIn job), copy the description into 'Deal description', and clear the Pipeline Error field. It's qualified on the next run.
+- **Summary line:** `LinkedIn alerts: n email(s), n job(s); n passed title and location; n found on the company's own board, n need the description pasted`. If emails arrive but 0 jobs are read, LinkedIn changed its email layout: tell Claude.
+- **Turn off:** `linkedin_alerts: enabled: false` in config.yaml.
+- **Busy AI:** when Gemini stays busy, the qualify, research and draft steps stop early and the run shows a yellow warning, not a red failure (no alert email). The waiting deals are picked up by the next run, every 2 hours.
 
 ## Target companies
 The companies whose own job boards are read each run are listed in [target-companies.md](target-companies.md), with how they were chosen and how to check new ones (`scripts/check_company_boards.py`). Company boards keep roles up to 60 days old (`import.company_board_max_age_days`), because a company's board lists only open roles.

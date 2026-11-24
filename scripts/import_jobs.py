@@ -98,10 +98,19 @@ def main(argv=None) -> int:
         load_dotenv(ROOT / ".env")
         hs = HubSpotClient()
 
+    mailbox = None
+    if not args.offline:
+        from src.sources.linkedin_alerts import GmailAlerts
+        gmail = GmailAlerts()
+        mailbox = gmail if gmail.configured else None
+        if (config.get("linkedin_alerts") or {}).get("enabled") and mailbox is None:
+            print("! LinkedIn alerts are on in config.yaml, but no Gmail secrets are set "
+                  "(ALERTS_GMAIL_ADDRESS / ALERTS_GMAIL_APP_PASSWORD, or GMAIL_ADDRESS / GMAIL_APP_PASSWORD).")
+
     mode = ("DRY RUN (fake HubSpot)" if args.dry_run else "LIVE (real HubSpot)") + \
            (", offline sample data" if args.offline else "")
     print(f"== Job board import: {mode}")
-    report = run_import(config, hs, http)
+    report = run_import(config, hs, http, mailbox=mailbox)
     lines = report.lines()
     print("\n".join(lines))
 

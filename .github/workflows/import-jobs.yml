@@ -38,6 +38,12 @@ jobs:
       - name: Import jobs
         env:
           HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          # Read-only access to LinkedIn job-alert emails (config.yaml > linkedin_alerts)
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          # Optional: when alerts arrive in a different Gmail account from the digest sender
+          ALERTS_GMAIL_ADDRESS: ${{ secrets.ALERTS_GMAIL_ADDRESS }}
+          ALERTS_GMAIL_APP_PASSWORD: ${{ secrets.ALERTS_GMAIL_APP_PASSWORD }}
           # Scheduled runs have no inputs, so they always run live.
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
         run: |

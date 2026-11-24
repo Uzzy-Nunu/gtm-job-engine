@@ -59,6 +59,8 @@ class ImportReport:
             f"{k} {self.matched_by_list[k]} (new {self.created_by_list[k]})" for k in self.matched_by_list))
         if self.alerts:
             out.append(self.alerts.line())
+            if self.alerts.jobs:
+                out += self.alerts.detail_lines()
         out.append(f"Daily cap: {self.cap} (already imported today: {self.already_today})")
         out.append(f"New deals: {len(self.created)} | duplicates: {self.duplicates} | "
                    f"updated: {self.updated} | left for tomorrow (cap): {self.not_imported_cap}")

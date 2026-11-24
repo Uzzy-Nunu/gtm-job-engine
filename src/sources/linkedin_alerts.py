@@ -30,6 +30,7 @@ from src.sources import company_boards
 from src.sources.base import JobPosting, html_to_text
 
 IMAP_HOST = "imap.gmail.com"
+SAMPLES_SHOWN = 15
 DEFAULT_SENDERS = ["jobalerts-noreply@linkedin.com", "jobs-listings@linkedin.com"]
 JOB_LINK = re.compile(r"https?://(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com/(?:comm/)?jobs/view/(\d+)[^\s\"'<>)]*",
                       re.IGNORECASE)
@@ -274,11 +275,21 @@ class AlertStats:
     considered: int = 0
     found_on_board: int = 0
     needs_text: int = 0
+    skipped_title: int = 0
+    skipped_location: int = 0
+    samples: list = None    # (reason, title, location) for the log: public job-posting text only
 
     def line(self) -> str:
         return (f"LinkedIn alerts: {self.emails} email(s), {self.jobs} job(s); {self.considered} passed title and "
                 f"location; {self.found_on_board} found on the company's own board, {self.needs_text} need the "
                 "description pasted")
+
+    def detail_lines(self) -> list[str]:
+        out = [f"  LinkedIn alert jobs skipped: title not on your lists {self.skipped_title}, "
+               f"location not remote or not open to you {self.skipped_location}"]
+        out += [f"  ~ {reason}: {title[:60]} | {location[:50] or 'no location'}"
+                for reason, title, location in (self.samples or [])[:SAMPLES_SHOWN]]
+        return out
 
 
 def read_alerts(http, config: dict, mailbox, stats: AlertStats, now: datetime | None = None) -> list[JobPosting]:
@@ -298,7 +309,14 @@ def read_alerts(http, config: dict, mailbox, stats: AlertStats, now: datetime | 
     finder = BoardFinder(http, config)
     out = []
     for job in jobs.values():
-        if not titles.match(job.title) or not looks_remote(job.location) or not region_ok(job.location, eligible):
+        stats.samples = stats.samples or []
+        if not titles.match(job.title):
+            stats.skipped_title += 1
+            stats.samples.append(("title", job.title, job.location))
+            continue
+        if not looks_remote(job.location) or not region_ok(job.location, eligible):
+            stats.skipped_location += 1
+            stats.samples.append(("location", job.title, job.location))
             continue
         stats.considered += 1
         posting = finder.find(job) if opts.get("find_on_company_boards", True) else None

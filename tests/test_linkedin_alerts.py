@@ -150,7 +150,10 @@ def test_alert_jobs_are_filtered_matched_to_boards_and_flagged_when_not_found():
     assert waiting["apply_url"] == "https://www.linkedin.com/jobs/view/4100000001"
     assert len(deals) == 3
     assert not any("linkedin.com" in u for u in http.urls)   # never opens LinkedIn
-    assert "LinkedIn alerts: 2 email(s), 5 job(s); 3 passed" in "\n".join(report.lines())
+    text = "\n".join(report.lines())
+    assert "LinkedIn alerts: 2 email(s), 5 job(s); 3 passed" in text
+    assert "title not on your lists 1, location not remote or not open to you 1" in text
+    assert "~ location: Marketing Automation Specialist | United States (Remote)" in text
 
     again = run_import(config(), hs, BoardHttp(), now=NOW, mailbox=box)
     assert again.duplicates == 3 and len(hs.all("deals")) == 3

@@ -511,7 +511,7 @@ timezone: "Africa/Lagos"
 | M3 | **Intake:** job boards, capture bookmarklet, paste-a-link form and Worker | Capturing or pasting a post creates exactly one deal and a linked poster contact with the correct profile link. A repeat is flagged as a duplicate. A URL-only submission is flagged "Needs post text" |
 | M4 | **Qualify and research** | Sample jobs score as expected. Hard filters archive restricted roles |
 | M5 | **Draft** | A tailored CV passes the truth check, opens in Notepad cleanly after copy-paste, and is no more than 2 pages |
-| M6 | **Operations:** schedules, digest, alerts, dry-run | 3 consecutive scheduled runs with no unhandled errors. Digest received |
+| M6 | **Operations:** schedules, digest, alerts, dry-run | 3 consecutive scheduled runs with no unhandled errors. Digest received. **Done 24 Nov 2026:** Peace closed M6 once the scheduled morning digest arrived, without waiting for 3 days (her decision); the digest and failure alerts keep watching run health |
 | M7 | **Go live:** free Gemini key, real jobs | 5 applications a day for 5 days running |
 | M8 | **Portfolio:** README case study, diagram, Loom, LinkedIn posts | Published and linked in LinkedIn Featured |
 | M9 | **Hold 15 a day** | Caps are already set for 15 a day (§3 decision). Done when 15 applications a day run for 5 working days with quality holding steady (truth-check pass rate ≥ 90%, stable edit time) |

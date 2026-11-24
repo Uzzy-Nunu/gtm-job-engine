@@ -154,3 +154,14 @@ def test_weekly_offline_script(capsys):
     assert send_weekly.main(["--offline"]) == 0
     out = capsys.readouterr().out
     assert "Weekly job summary" in out and "Sample job" not in out
+
+
+# --- archive report -----------------------------------------------------------------
+
+def test_archive_report_counts_reasons_and_rubric_parts(capsys):
+    from scripts import archive_report
+    assert archive_report.main(["--offline"]) == 0
+    out = capsys.readouterr().out
+    assert "Fit score below the threshold: 1" in out and "Remote only in a region you can't work from: 1" in out
+    assert "- Remote: 20.0" in out and "- Salary: 0.0" in out and "- USA: 1" in out
+    assert "Demo" not in out   # company names stay out of the public log

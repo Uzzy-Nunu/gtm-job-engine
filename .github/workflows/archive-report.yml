@@ -1,0 +1,26 @@
+name: Archive report
+
+# Manual: Actions > Archive report > Run workflow.
+# Reads every Archived deal and counts why it was archived (not remote, region,
+# excluded title, low score) and which rubric parts lost points. Read-only.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Count archive reasons
+        run: python scripts/archive_report.py

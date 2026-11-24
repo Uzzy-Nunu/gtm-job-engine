@@ -17,25 +17,23 @@ Working from Nigeria adds a filter most job tools ignore: many "remote" GTM role
 Automate the repetitive research and drafting. Keep a human in charge of every irreversible step.
 
 ```mermaid
-flowchart LR
-    A1["Job boards: RemoteOK, Himalayas, WWR, Remotive, Jobicy, RSS"] --> F
-    A2["79 company careers pages: Greenhouse, Lever, Ashby"] --> F
-    A3["LinkedIn job-alert emails, read-only Gmail"] --> F
-    F{"Title, remote, region and date filters"} --> N
-    A4["Paste form and capture bookmarklet on a Cloudflare Worker"] --> N
-    N["HubSpot deal: New"] --> Q["AI qualify: facts from AI, fit score in code"]
-    Q -->|"below 60 or hard filter"| X["Archived"]
-    Q --> R["Research: company brief and angle"]
-    R --> D["Draft: CV, cover letter, messages"]
+flowchart TD
+    A1["Job boards and RSS"] --> F
+    A2["79 company careers pages"] --> F
+    A3["LinkedIn job-alert emails"] --> F
+    F{"Remote, region, title<br/>and date filters"} --> N
+    A4["Paste form and<br/>capture button"] --> N
+    N["HubSpot deal: New"] --> Q["AI qualify and fit score"]
+    Q -->|"low fit"| X["Archived"]
+    Q --> R["Company research"]
+    R --> D["Draft CV, cover letter<br/>and messages"]
     D --> T{"Truth check"}
     T --> RR["Ready for Review"]
-    RR --> H(["Peace reviews, edits, applies and sends"])
-    H --> AP["Applied"]
-    AP --> FU["Follow-up task after 5 quiet days"]
-    S[["GitHub Actions schedules"]] -.-> F
-    S -.-> Q
-    M[["Daily digest, weekly summary, failure alerts"]] -.-> RR
+    RR --> H(["Peace reviews and applies"])
+    H --> AP["Applied, then follow-up<br/>task after 5 days"]
 ```
+
+Schedules run on GitHub Actions; a daily digest, a Monday summary and failure alerts arrive by email.
 
 Every job is a HubSpot deal, and every step moves it by changing its stage. The CRM doubles as the review queue.
 

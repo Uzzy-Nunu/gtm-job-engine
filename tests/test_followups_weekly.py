@@ -165,3 +165,21 @@ def test_archive_report_counts_reasons_and_rubric_parts(capsys):
     assert "Fit score below the threshold: 1" in out and "Remote only in a region you can't work from: 1" in out
     assert "- Remote: 20.0" in out and "- Salary: 0.0" in out and "- USA: 1" in out
     assert "Demo" not in out   # company names stay out of the public log
+
+
+def test_weekly_tracks_daily_applications_and_milestone_streaks():
+    hs = FakeHubSpot()
+    for day, n in (("2026-11-17", 5), ("2026-11-18", 6), ("2026-11-19", 15), ("2026-11-20", 5)):
+        for i in range(n):
+            seed(hs, f"{day}-{i}", "Applied", days_old=10, applied_date=day)
+    w = build_weekly(hs)
+    assert w.applied == 31 and w.per_day["2026-11-19"] == 15
+    assert w.working_days == ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20", "2026-11-23"]
+    lines = w.milestone_lines()
+    assert lines[0].startswith("Applications per working day: 11-16 0, 11-17 5, 11-18 6, 11-19 15, 11-20 5")
+    assert lines[1] == "M7 go live: 4 of 5 days in a row at 5+"
+    assert lines[2] == "M9 hold 15 a day: 1 of 5 days in a row at 15+"
+    seed(hs, "extra", "Applied", days_old=10, applied_date="2026-11-23")
+    for i in range(4):
+        seed(hs, f"more-{i}", "Applied", days_old=10, applied_date="2026-11-23")
+    assert build_weekly(hs).milestone_lines()[1] == "M7 go live: 5 of 5 days in a row at 5+ (met)"

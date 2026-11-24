@@ -109,7 +109,7 @@ Time 5 real applications done fully by hand, split into 8 steps that match the p
 - **Turning on the daily schedule:** repository variable `ENABLE_DIGEST` = `true`. Delete it to pause.
 - **By hand:** Actions > **Daily digest** > Run workflow (`send` emails it now; `preview` shows counts only). Locally: `python scripts/send_digest.py --offline` (made-up deals), `--preview` (saves `output/digest-preview.html`), or no flag to send.
 - **Follow-up tasks:** each digest run adds a HubSpot task (`Follow up: <deal>`, due today) to Applied deals with no update for 5 days. Find them under CRM > Tasks (they have no owner, so use the "All tasks" view). Send the follow-up, mark the task complete and move the deal to Followed Up. A deal never gets a second task while one is open.
-- **Weekly summary** (Mondays about 08:07 Lagos, workflow **Weekly summary**, same `ENABLE_DIGEST` switch): new jobs, qualified rate, applied this week, keyword coverage, truth-check pass rate, interview rate and failed runs. Numbers only. **Set Applied Date on a deal when you apply**, or the applied count stays at 0. By hand: Actions > Weekly summary > Run workflow; locally `python scripts/send_weekly.py --offline` or `--preview`.
+- **Weekly summary** (Mondays about 08:07 Lagos, includes applications per working day and the M7 / M9 streaks from `goals` in config.yaml, workflow **Weekly summary**, same `ENABLE_DIGEST` switch): new jobs, qualified rate, applied this week, keyword coverage, truth-check pass rate, interview rate and failed runs. Numbers only. **Set Applied Date on a deal when you apply**, or the applied count stays at 0. By hand: Actions > Weekly summary > Run workflow; locally `python scripts/send_weekly.py --offline` or `--preview`.
 - **Changing the app password:** create a new one in your Google Account (Security > App passwords), update `GMAIL_APP_PASSWORD`, and delete the old one in Google.
 
 ## Adding job titles
@@ -142,6 +142,9 @@ The import run (06:17 and 14:17 Lagos) reads your LinkedIn job-alert emails from
 - **Summary line:** `LinkedIn alerts: n email(s), n job(s); n passed title and location; n found on the company's own board, n need the description pasted`. If emails arrive but 0 jobs are read, LinkedIn changed its email layout: tell Claude.
 - **Turn off:** `linkedin_alerts: enabled: false` in config.yaml.
 - **Busy AI:** when Gemini stays busy, the qualify, research and draft steps stop early and the run shows a yellow warning, not a red failure (no alert email). The waiting deals are picked up by the next run, every 2 hours.
+
+## Portfolio
+Demo script, LinkedIn post drafts and the publishing checklist are in [portfolio.md](portfolio.md).
 
 ## Target companies
 The companies whose own job boards are read each run are listed in [target-companies.md](target-companies.md), with how they were chosen and how to check new ones (`scripts/check_company_boards.py`). Company boards keep roles up to 60 days old (`import.company_board_max_age_days`), because a company's board lists only open roles.

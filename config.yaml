@@ -153,6 +153,12 @@ rubric:
     unclear_points: 7            # seniority not stated
   salary_listed: 0          # was 10; a listed salary isn't a sign of fit (24 Nov 2026)
 
+# --- Goals (PRD §3, §17 M7 and M9): shown in the Monday weekly summary ----
+goals:
+  go_live_per_day: 5        # M7: done at 5 applications a day for 5 working days in a row
+  target_per_day: 15        # M9: done at 15 a day for 5 working days in a row
+  streak_days: 5
+
 # --- Volume caps (Phase 1 -> Phase 2 values in comments) -------------
 daily_import_cap: 100      # set for 15 applications a day (decision 17 Nov 2026)
 daily_draft_cap: 20        # about 15 sent a day after review; lower it if drafts need too much editing

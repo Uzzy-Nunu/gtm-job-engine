@@ -1,8 +1,8 @@
 # PRD: GTM Job Engine
 
 **Owner:** Peace George
-**Status:** Draft v1.0
-**Last updated:** 13 Nov 2026
+**Status:** v1.1, build complete (M0-M9 built 13-25 Nov 2026; M7 and M9 validating in live use)
+**Last updated:** 25 Nov 2026
 **Repository:** `gtm-job-engine` (public, with no personal data committed)
 
 ---
@@ -133,7 +133,7 @@ To scale up, raise `daily_draft_cap` and `daily_import_cap` in `config.yaml` (se
  Ashby, RemoteOK, Himalayas, ──► ┌──────────────────────────┐
  We Work Remotely RSS)           │        HUBSPOT            │◄── Peace reviews,
  LinkedIn job-alert emails ────► │ Deals · Companies ·       │    edits, approves
- (Google Apps Script, P1)        │ Contacts · Files          │
+ (read-only Gmail IMAP)          │ Contacts · Files          │
                                  └────────────┬─────────────┘
                                               ▲│
                       GitHub Actions (schedule)│▼
@@ -155,7 +155,7 @@ To scale up, raise `daily_draft_cap` and `daily_import_cap` in `config.yaml` (se
 | Pipeline code | Python 3.12 | Intake, qualify, research, draft, digest |
 | Scheduler | GitHub Actions (cron and manual trigger) | Runs the pipeline on a schedule |
 | Capture endpoint | Cloudflare Worker (free) | Receives bookmarklet clicks around the clock |
-| Job-alert reader (P1) | Google Apps Script | Reads a Gmail label and posts to the Worker |
+| Job-alert reader | Python (import run), Gmail IMAP read-only | Reads LinkedIn job-alert emails; see IN-7 decision |
 | AI | Gemini API or Claude API (configurable) | Extraction, scoring, research summary, drafting |
 | Documents | python-docx | ATS-safe .docx CV and cover letter |
 | Secrets | GitHub Secrets, Cloudflare secrets | API keys and master CV |
@@ -464,7 +464,6 @@ gtm-job-engine/
 ├── scripts/
 │   └── setup_hubspot.py      # creates pipeline stages & properties
 ├── worker/                   # Cloudflare Worker + bookmarklet
-├── apps_script/              # Gmail job-alert reader (P1)
 ├── tests/
 │   └── fixtures/             # made-up sample jobs only
 └── .github/workflows/        # pipeline.yml, digest.yml, weekly.yml, tests.yml
@@ -522,9 +521,11 @@ timezone: "Africa/Lagos"
 | M4 | **Qualify and research** | Sample jobs score as expected. Hard filters archive restricted roles |
 | M5 | **Draft** | A tailored CV passes the truth check, opens in Notepad cleanly after copy-paste, and is no more than 2 pages |
 | M6 | **Operations:** schedules, digest, alerts, dry-run | 3 consecutive scheduled runs with no unhandled errors. Digest received. **Done 24 Nov 2026:** Peace closed M6 once the scheduled morning digest arrived, without waiting for 3 days (her decision); the digest and failure alerts keep watching run health |
-| M7 | **Go live:** free Gemini key, real jobs | 5 applications a day for 5 days running |
-| M8 | **Portfolio:** README case study, diagram, Loom, LinkedIn posts | Published and linked in LinkedIn Featured |
-| M9 | **Hold 15 a day** | Caps are already set for 15 a day (§3 decision). Done when 15 applications a day run for 5 working days with quality holding steady (truth-check pass rate ≥ 90%, stable edit time) |
+| M7 | **Go live:** free Gemini key, real jobs | 5 applications a day for 5 days running. **Built 24-25 Nov 2026:** archive diagnosis and re-scoring, scoring tuned on real jobs (QU-7, §11.3), 79 target company boards, 24 explore titles, LinkedIn job alerts (IN-7), backup AI models, busy-AI warnings. Validation in live use from 25 Nov; the weekly summary tracks the 5-a-day streak |
+| M8 | **Portfolio:** README case study, diagram, Loom, LinkedIn posts | Published and linked in LinkedIn Featured. **Built 25 Nov 2026:** README case study with architecture diagram and measured results; demo script, post drafts and publishing checklist in `docs/portfolio.md`. Recording and posting are Peace's |
+| M9 | **Hold 15 a day** | Caps are already set for 15 a day (§3 decision). Done when 15 applications a day run for 5 working days with quality holding steady (truth-check pass rate ≥ 90%, stable edit time). **Built 25 Nov 2026:** `goals` in config; the Monday weekly summary shows applications per working day and the M7 (5+) and M9 (15+) streaks next to the truth-check pass rate. Edit time isn't tracked (Peace skipped time tracking for now) |
+
+**Decision (25 Nov 2026): build complete.** Peace asked to finish the build in one day and validate over the following days. M7 and M9 acceptance depend on real applications, so their rows say "built, validating" until the weekly summary shows the streaks met; M8 is done once the demo and posts are published.
 
 **Decision (14 Nov 2026): M2 runs in parallel with M3 and does not block the build.** Peace completes the 5 timed manual applications while intake is being built. To keep the baseline honest, the timed applications are done before she starts using the capture button or paste form. If that becomes impractical, the PRD will record that the baseline is partial or estimated.
 

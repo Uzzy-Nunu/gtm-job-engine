@@ -26,7 +26,16 @@ from src.hubspot_schema import PIPELINE_LABEL, STAGES
 
 APPLIED_OR_LATER = ("Applied", "Followed Up", "Interviewing", "Offer", "Rejected")
 PAST_QUALIFY = ("Qualified", "Researched", "Ready for Review", "Approved") + APPLIED_OR_LATER
-APPLY_TARGET_PER_WEEK = 25          # PRD §3 Phase 1: 5 per weekday
+DEFAULT_GOALS = {"go_live_per_day": 5, "target_per_day": 15, "streak_days": 5}   # PRD §17 M7 and M9
+
+
+def _streak(per_day: dict, days: list, minimum: int) -> int:
+    """Longest run of consecutive working days (in `days` order) with >= minimum applications."""
+    best = run = 0
+    for day in days:
+        run = run + 1 if per_day.get(day, 0) >= minimum else 0
+        best = max(best, run)
+    return best
 COVERAGE_TARGET = 80
 
 
@@ -42,6 +51,9 @@ class Weekly:
     arrived_archived: int = 0
     arrived_waiting: int = 0
     applied: int = 0
+    per_day: dict = field(default_factory=dict)       # working day (YYYY-MM-DD) -> applications
+    working_days: list = field(default_factory=list)
+    goals: dict = field(default_factory=lambda: dict(DEFAULT_GOALS))
     drafted: int = 0
     coverage_avg: float | None = None
     coverage_at_target: int = 0
@@ -66,9 +78,11 @@ class Weekly:
                 f"Qualified rate: {_pct(self.arrived_qualified, processed)} "
                 f"({self.arrived_qualified} of {processed} processed; target 20-40%)"
                 + (f"; {self.arrived_waiting} still waiting" if self.arrived_waiting else ""),
-                f"Applied: {self.applied} (target {APPLY_TARGET_PER_WEEK}: 5 per weekday)",
+                f"Applied: {self.applied} (goal {self.goals['target_per_day'] * 5}: "
+                f"{self.goals['target_per_day']} per weekday)",
                 f"Failed GitHub runs: {self.failed_runs}",
             ]),
+            ("Milestone progress (working days this week)", self.milestone_lines()),
             ("Draft quality (all drafted deals)", [
                 f"Drafted: {self.drafted}",
                 f"Average keyword coverage: {cov}; {_pct(self.coverage_at_target, self.drafted)} at "
@@ -84,6 +98,16 @@ class Weekly:
             ]),
             ("Pipeline now", [f"{s}: {n}" for s, n in self.counts.items() if n] or ["empty"]),
         ]
+
+    def milestone_lines(self) -> list[str]:
+        g = self.goals
+        daily = ", ".join(f"{d[5:]} {self.per_day.get(d, 0)}" for d in self.working_days) or "none"
+        out = [f"Applications per working day: {daily}"]
+        for label, key in (("M7 go live", "go_live_per_day"), ("M9 hold 15 a day", "target_per_day")):
+            streak = _streak(self.per_day, self.working_days, g[key])
+            done = " (met)" if streak >= g["streak_days"] else ""
+            out.append(f"{label}: {streak} of {g['streak_days']} days in a row at {g[key]}+{done}")
+        return out
 
     def text(self) -> str:
         out = [self.subject, ""]
@@ -118,6 +142,7 @@ class WeeklyBuilder:
         self.tz = ZoneInfo(config.get("timezone", "UTC"))
         self._now = now or (lambda: datetime.now(timezone.utc))
         self.github = github if github is not None else github_failed_runs
+        self.goals = dict(DEFAULT_GOALS, **(config.get("goals") or {}))
         self.pipeline_id, self.stage = None, {}
 
     def _resolve(self):
@@ -176,9 +201,18 @@ class WeeklyBuilder:
             else:
                 w.arrived_waiting += 1
 
-        w.applied = self._count([{"propertyName": "applied_date", "operator": "GTE",
-                                  "value": str(int(datetime(start.year, start.month, start.day,
-                                                            tzinfo=timezone.utc).timestamp() * 1000))}])
+        w.goals = self.goals
+        first = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
+        applied = self._all([{"propertyName": "applied_date", "operator": "GTE",
+                              "value": str(int(first.timestamp() * 1000))}], ["applied_date"])
+        w.applied = len(applied)
+        for d in applied:
+            day = str((d.get("properties") or {}).get("applied_date") or "")[:10]
+            if day.isdigit():   # epoch ms
+                day = datetime.fromtimestamp(int(day) / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+            w.per_day[day] = w.per_day.get(day, 0) + 1
+        w.working_days = [(first + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(8)
+                          if (first + timedelta(days=i)).weekday() < 5 and first + timedelta(days=i) <= now]
 
         drafted = self._all([{"propertyName": "keyword_coverage", "operator": "HAS_PROPERTY"}],
                             ["keyword_coverage", "pipeline_error"])
